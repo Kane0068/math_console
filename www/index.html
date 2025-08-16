@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>MathAi - Gelişmiş Çözüm Asistanı</title>
+    <script src="config.js"></script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap&subset=latin-ext" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- ❌ KaTeX KALDIRILDI (MathJax ile çakışıyor)
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    -->
+
+    <!-- ❌ MathJax MANUEL KONFIGÜRASYONU KALDIRILDI (globalRenderManager halledecek)
+    <script>
+        window.MathJax = { ... };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    -->
+
+    <!-- ✅ CDN optimizasyonları korundu -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+
+    <style>
+        /* Render sistemi için optimizasyonlar */
+        .render-pending {
+            position: relative;
+            min-height: 1.5em;
+        }
+        
+        .render-pending::after {
+            content: "⏳";
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.2em;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        /* Yeni render sınıfları için style */
+        .rendered-text {
+            /* Normal text için */
+        }
+        
+        .rendered-pure_latex {
+            /* Saf LaTeX için */
+            font-family: 'Computer Modern', serif;
+        }
+        
+        .rendered-inline_math {
+            /* Inline matematik için */
+        }
+        
+        .rendered-mixed_content {
+            /* Karışık içerik için */
+        }
+        
+        .priority-rendered {
+            /* Priority elementler için */
+            animation: priorityGlow 0.5s ease-in-out;
+        }
+        
+        @keyframes priorityGlow {
+            0% { box-shadow: 0 0 0 rgba(99, 102, 241, 0); }
+            50% { box-shadow: 0 0 10px rgba(99, 102, 241, 0.3); }
+            100% { box-shadow: 0 0 0 rgba(99, 102, 241, 0); }
+        }
+        
+        .render-error {
+            /* Render hatası için */
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 4px;
+            padding: 2px 4px;
+            color: #dc2626;
+            font-size: 0.875em;
+        }
+
+        /* MathJax render optimizasyonları */
+        .math-rendered {
+            /* MathJax tarafından render edilen elementler */
+        }
+        
+        .mathjax-rendered {
+            /* MathJax specifik stilleri */
+        }
+        
+        .mixed-content-container {
+            /* Mixed content container */
+        }
+        
+        .latex-part {
+            /* LaTeX parçası */
+        }
+        
+        .text-part {
+            /* Text parçası */
+        }
+    </style>
+
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- ✅ Math.js korundu (hesaplamalar için gerekli) -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjs@11.11.2/lib/browser/math.js"></script>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex flex-col">
+    <div class="container relative z-10 w-full max-w-7xl mx-auto p-1 flex-grow">
+        <div class="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/60 overflow-hidden min-h-full flex flex-col">
+            <!-- Header Section -->
+            <header class="relative bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white overflow-hidden">
+                <div class="absolute inset-0 bg-black/5"></div>
+
+                <div class="relative z-10 p-2">
+                    <!-- Navigation Icons -->
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="flex space-x-2">
+                            <a href="profile.html" class="p-2 bg-white/20 backdrop-blur-sm rounded-lg hover:bg-white/30 transition-all duration-300 transform hover:scale-110 group" title="Profilim">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:text-yellow-300 transition-colors">
+                                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="12" cy="7" r="4"/>
+                                </svg>
+                            </a>
+                        </div>
+                        <button id="logout-btn" class="p-2 bg-red-500/20 backdrop-blur-sm rounded-lg hover:bg-red-500/30 transition-all duration-300 transform hover:scale-110 group" title="Çıkış Yap">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:text-red-300 transition-colors">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                                <polyline points="16 17 21 12 16 7"/>
+                                <line x1="21" y1="12" x2="9" y2="12"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Title Section -->
+                    <div class="text-center">
+                        <div class="inline-flex items-center space-x-3 mb-2">
+                            <div class="w-10 h-10 bg-white/25 backdrop-blur-sm rounded-xl flex items-center justify-center floating-element">
+                                <span class="text-xl font-bold">🔢</span>
+                            </div>
+                            <div>
+                                <p id="user-name" class="text-white/80 text-xs mb-1">Hoş geldiniz!</p>
+                                <h1 class="text-4xl md:text-6xl font-black tracking-tight mb-1 drop-shadow-lg">
+                                    <span class="bg-gradient-to-r from-yellow-300 via-orange-300 to-yellow-400 bg-clip-text text-transparent filter drop-shadow-sm">Math</span><span class="text-white filter drop-shadow-md">Ai</span>
+                                </h1>
+                                <div class="flex items-center justify-center space-x-2 text-white/90">
+                                    <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                                    <p id="header-subtitle" class="text-sm font-medium">Yükleniyor...</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Status Area -->
+                        <div id="user-status-area" class="mt-2 flex justify-center">
+                            <div id="query-counter-container" class="bg-white/25 backdrop-blur-sm border border-white/30 rounded-full px-3 py-2 flex items-center space-x-2 glow-effect">
+                                <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                                <span id="query-label" class="font-semibold text-white text-sm">Kalan Sorgu:</span>
+                                <span id="query-count" class="font-bold text-yellow-300 text-sm">...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <div class="p-3 flex-grow">
+                <!-- Question Setup Area -->
+                <div id="question-setup-area" class="space-y-3">
+                    <div class="text-center">
+                        <h2 class="text-xl font-bold text-gray-800 mb-2">Matematik Problemini Çözelim!</h2>
+                        <p class="text-gray-600 text-sm">Sorunuzu fotoğraf veya metin olarak girebilirsiniz</p>
+                    </div>
+
+                    <!-- Mode Selection -->
+                    <div class="flex justify-center">
+                        <div class="bg-gray-100 rounded-xl p-1 flex space-x-1 shadow-inner">
+                            <button id="photo-mode-btn" class="mode-tab px-3 py-2 rounded-lg font-semibold flex items-center space-x-1 min-w-0">
+                                <span class="text-lg">📸</span>
+                                <span class="text-sm">Fotoğraf</span>
+                            </button>
+                            <button id="handwriting-mode-btn" class="mode-tab px-3 py-2 rounded-lg font-semibold flex items-center space-x-1 min-w-0">
+                                <span class="text-lg">✏️</span>
+                                <span class="text-sm">Metin</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Photo Mode Container -->
+                    <div id="photo-mode-container" class="feature-card">
+                        <div class="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl p-4 text-center border border-blue-200/50 neo-shadow">
+                            <input type="file" id="imageUploader" class="hidden" accept="image/*">
+                            <input type="file" id="cameraUploader" class="hidden" accept="image/*" capture="environment">
+                            
+                            <div id="upload-selection">
+                                <div class="w-12 h-12 mx-auto mb-3 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg floating-element">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                </div>
+                                <h3 class="text-lg font-bold text-gray-800 mb-2">Soruyu Yükleyin</h3>
+                                <p class="text-gray-600 mb-4 text-sm">Matematik sorusunu fotoğraf olarak yükleyin</p>
+                                
+                                <div class="grid grid-cols-1 gap-2 max-w-xs mx-auto">
+                                    <button id="selectFileBtn" class="btn btn-primary flex items-center justify-center space-x-2 py-3">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                        </svg>
+                                        <span>Dosya Seç</span>
+                                    </button>
+                                    <button id="takePhotoBtn" class="btn btn-secondary flex items-center justify-center space-x-2 py-3 relative group">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        </svg>
+                                        <span>Kamera</span>
+                                        
+
+                                    </button>
+                                    
+
+                                </div>
+                            </div>
+                            
+                            <div id="preview-container" class="hidden">
+                                <div class="relative inline-block mb-3">
+                                    <img id="imagePreview" src="" class="max-h-32 mx-auto rounded-lg shadow-lg border-2 border-white" alt="Yüklenen Soru Önizlemesi">
+                                    <div class="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <button id="changePhotoBtn" class="btn btn-tertiary text-sm">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                    </svg>
+                                    Değiştir
+                                </button>
+                            </div>
+                        </div>
+
+                        <button id="startFromPhotoBtn" class="mt-3 w-full btn text-white py-3 font-bold" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);" disabled>
+                            <span class="flex items-center justify-center space-x-2">
+                                <span>🚀</span>
+                                <span>Çözüme Başla</span>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+
+                    <!-- Handwriting Mode Container -->
+                    <div id="handwriting-mode-container" class="hidden feature-card">
+                        <!-- Keyboard Input -->
+                        <div id="keyboard-input-container" class="bg-gradient-to-br from-purple-50 to-pink-100 rounded-xl p-4 border border-purple-200/50 neo-shadow">
+                            <div class="text-center mb-3">
+                                <div class="w-10 h-10 mx-auto mb-2 bg-gradient-to-br from-purple-400 to-pink-500 rounded-lg flex items-center justify-center floating-element">
+                                    <span class="text-lg">⌨️</span>
+                                </div>
+                                <h3 class="text-lg font-bold text-gray-800 mb-1">Matematik Sorusu</h3>
+                                <p class="text-gray-600 text-sm">Sorunuzu yazın veya el yazısı moduna geçin</p>
+                            </div>
+                            
+                            <div class="relative">
+                                <textarea id="keyboard-input" class="w-full h-24 p-3 border-0 rounded-lg shadow-inner bg-white/80 backdrop-blur-sm focus:ring-2 focus:ring-purple-300 focus:outline-none transition-all resize-none text-sm" placeholder="Örnek: 2x + 5 = 15 denklemini çözün..."></textarea>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 gap-2 mt-3">
+                                <button id="startFromTextBtn" class="btn btn-primary py-3 flex items-center justify-center space-x-2">
+                                    <span>📝</span>
+                                    <span>Metinden Tanı</span>
+                                </button>
+                                <button id="switchToCanvasBtn" class="btn btn-secondary py-3 flex items-center justify-center space-x-2">
+                                    <span>✏️</span>
+                                    <span>El Yazısı Modu</span>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Handwriting Canvas -->
+                        <div id="handwriting-canvas-container" class="hidden bg-gradient-to-br from-green-50 to-blue-100 rounded-xl p-4 border border-green-200/50 neo-shadow">
+                            <div class="text-center mb-3">
+                                <div class="w-10 h-10 mx-auto mb-2 bg-gradient-to-br from-green-400 to-blue-500 rounded-lg flex items-center justify-center floating-element">
+                                    <span class="text-lg">✏️</span>
+                                </div>
+                                <h3 class="text-lg font-bold text-gray-800 mb-1">El Yazısı Modu</h3>
+                                <p class="text-gray-600 text-sm">Sorunuzu dokunarak yazın</p>
+                            </div>
+                            
+                            <div class="canvas-container w-full h-40 rounded-lg overflow-hidden bg-white shadow-inner border border-gray-200">
+                                <canvas id="handwritingCanvas"></canvas>
+                            </div>
+                            
+                            <!-- Canvas Tools -->
+                            <div class="flex justify-center items-center gap-2 mt-3 p-2 bg-white/50 backdrop-blur-sm rounded-lg border border-white/50">
+                                <button id="hw-pen-btn" class="tool-btn p-2 rounded-lg flex flex-col items-center space-y-1" title="Kalem">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                                    </svg>
+                                    <span class="text-xs font-medium">Kalem</span>
+                                </button>
+                                <button id="hw-eraser-btn" class="tool-btn p-2 rounded-lg flex flex-col items-center space-y-1" title="Silgi">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21H7Z"/>
+                                        <path d="M5 12.5 12 19.5"/>
+                                    </svg>
+                                    <span class="text-xs font-medium">Silgi</span>
+                                </button>
+                                <button id="hw-clear-btn" class="tool-btn p-2 rounded-lg flex flex-col items-center space-y-1" title="Temizle">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M3 6h18"/>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+                                        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                    </svg>
+                                    <span class="text-xs font-medium">Temizle</span>
+                                </button>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 gap-2 mt-3">
+                                <button id="recognizeHandwritingBtn" class="btn btn-primary py-3 flex items-center justify-center space-x-2">
+                                    <span>📝</span>
+                                    <span>El Yazısını Tanı</span>
+                                </button>
+                                <button id="switchToKeyboardBtn" class="btn btn-secondary py-3 flex items-center justify-center space-x-2">
+                                    <span>⌨️</span>
+                                    <span>Klavye Modu</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question Summary -->
+                <div id="question-summary-container" class="hidden mt-4 feature-card">
+                    <div class="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 p-1 rounded-xl">
+                        <div class="bg-white rounded-xl p-4">
+                            <div class="flex items-center space-x-3 mb-3">
+                                <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
+                                    <span class="text-lg">📝</span>
+                                </div>
+                                <h2 class="text-lg font-bold text-gray-800">Tanınan Soru</h2>
+                            </div>
+                            <div id="question" class="bg-gray-50 p-3 rounded-lg shadow-inner leading-relaxed text-sm"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div id="top-action-buttons" class="hidden grid grid-cols-2 gap-2 mt-4">
+                    <button id="start-solving-workspace-btn" class="btn text-white py-4 font-bold transform hover:scale-105 feature-card" style="background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%);">
+                        <div class="flex flex-col items-center space-y-1">
+                            <span class="text-xl">🧠</span>
+                            <span class="text-xs">Kendim Çözeceğim</span>
+                        </div>
+                    </button>
+                    <button id="solve-all-btn" class="btn text-white py-4 font-bold transform hover:scale-105 feature-card" style="background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);">
+                        <div class="flex flex-col items-center space-y-1">
+                            <span class="text-xl">🎯</span>
+                            <span class="text-xs">İnteraktif Çözüm</span>
+                        </div>
+                    </button>
+                    <button id="show-full-solution-btn" class="btn text-white py-4 font-bold transform hover:scale-105 feature-card" style="background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);">
+                        <div class="flex flex-col items-center space-y-1">
+                            <span class="text-xl">⚡</span>
+                            <span class="text-xs">Tüm Çözümü Göster</span>
+                        </div>
+                    </button>
+                    <button id="new-question-btn" class="btn btn-secondary py-4 font-bold transform hover:scale-105 feature-card">
+                        <div class="flex flex-col items-center space-y-1">
+                            <span class="text-xl">🔄</span>
+                            <span class="text-xs">Yeni Soru</span>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- Solving Workspace -->
+                <div id="solving-workspace" class="hidden w-full max-w-4xl mx-auto mt-4">
+                    <div class="bg-gradient-to-r from-indigo-500 to-purple-600 p-1 rounded-xl">
+                        <div class="bg-white rounded-xl p-4">
+                            <div class="flex justify-between items-center mb-4">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center">
+                                        <span class="text-lg">🔬</span>
+                                    </div>
+                                    <h2 class="text-lg font-bold text-gray-800">Adım Adım Çözüm</h2>
+                                </div>
+                                <button id="goBackBtn" class="btn btn-secondary flex items-center space-x-1 text-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                                    </svg>
+                                    <span>Geri</span>
+                                </button>
+                            </div>
+                            
+                            <div id="step-by-step-container" class="space-y-3">
+                                <!-- Steps will be populated here -->
+                            </div>
+                            
+                            <!-- Workspace Message Input Area -->
+                            <div id="workspace-message-area" class="mt-3">
+                                <div class="relative">
+                                    <textarea id="workspace-message-input" class="workspace-message-input w-full h-20 p-3 rounded-lg focus:outline-none resize-none text-sm" placeholder="Çözümünüzü buraya yazın..."></textarea>
+                                </div>
+                                
+                                <button id="submit-workspace-answer" class="btn btn-primary mt-2 w-full py-3 text-sm">
+                                    <span class="flex items-center justify-center space-x-2">
+                                        <span>📤</span>
+                                        <span>Cevabı Gönder</span>
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Result Container -->
+                <div id="result-container" class="mt-4 hidden">
+                    <div id="status-message" class="flex items-center justify-center space-x-2 p-3 bg-gradient-to-r from-blue-100 to-purple-100 rounded-lg border border-blue-200 mb-3">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                                <div class="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                            </div>
+                            <span class="font-semibold text-gray-700 text-sm">İşleniyor...</span>
+                        </div>
+                    </div>
+                    
+                    <div id="solution-output" class="hidden">
+                        <div class="bg-gradient-to-r from-green-500 to-blue-600 p-1 rounded-xl">
+                            <div class="bg-white rounded-xl p-4">
+                                <div class="flex items-center space-x-3 mb-3">
+                                    <div class="w-8 h-8 bg-gradient-to-r from-green-500 to-blue-600 rounded-lg flex items-center justify-center">
+                                        <span class="text-lg">✨</span>
+                                    </div>
+                                    <h3 class="text-lg font-bold text-gray-800">Çözüm Sonucu</h3>
+                                </div>
+                                <!-- Solution content will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="bg-gradient-to-r from-gray-100 to-gray-50 border-t-2 border-gray-300/50 p-6 text-center mt-16 shadow-inner">
+                <div class="flex flex-col items-center space-y-3">
+                    <div class="flex items-center space-x-3 text-gray-700">
+                        <span class="text-2xl">🎓</span>
+                        <span class="font-bold text-lg bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">MathAi - Matematik öğrenmeyi kolaylaştırır</span>
+                    </div>
+                    <div class="flex items-center space-x-3 text-sm text-gray-600">
+                        <span class="font-semibold">İlkokul • Ortaokul • Lise</span>
+                        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-sm"></div>
+                        <span class="font-medium text-green-600">Aktif</span>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+    
+    <!-- ✅ Capacitor Core - Kamera için gerekli -->
+    <script src="https://unpkg.com/@capacitor/core@7.4.0/dist/capacitor.js"></script>
+    
+    <!-- ✅ JavaScript modülleri - Basit ve güvenilir yükleme -->
+    <script type="module" src="js/pages/index.js"></script>
+</body>
+</html>

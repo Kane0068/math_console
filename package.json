@@ -1,0 +1,29 @@
+{
+  "name": "matematik_asistan",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@capacitor-community/admob": "^7.0.3",
+    "@capacitor/android": "^7.4.0",
+    "@capacitor/camera": "^7.0.2",
+    "@capacitor/cli": "^7.4.0",
+    "@capacitor/core": "^7.4.0",
+    "@capacitor/filesystem": "^7.0.2",
+    "@capacitor/splash-screen": "^7.0.1",
+    "@revenuecat/purchases-capacitor": "^11.1.1",
+    "cordova-annotated-plugin-android": "^1.0.4",
+    "cordova-plugin-purchases": "^7.0.1",
+    "lru-cache": "^11.1.0",
+    "mathjs": "^14.5.3"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5"
+  }
+}

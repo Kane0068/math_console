@@ -1,0 +1,755 @@
+/* =================================================================== */
+/* ===           MathAi - RENDER-OPTIMIZED STIL DOSYASI              === */
+/* =================================================================== */
+/* AÇIKLAMA: Yeni render sistemi ile tam uyumlu, çakışmasız ve        */
+/* optimize edilmiş stil dosyası                                     */
+/* =================================================================== */
+
+/* =================================================================== */
+/* === 1. GLOBAL STİLLER ve TEMEL YAPILANDIRMA                     === */
+/* =================================================================== */
+
+html {
+    height: 100%;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f1f5f9; /* bg-slate-100 */
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='%23e2e8f0'%3e%3cpath d='M0 .5H31.5V32'/%3e%3c/svg%3e");
+    color: #1f2937; /* Varsayılan metin rengi */
+    
+}
+
+/* Yükleme animasyonu ve alanları pasif hale getirme */
+.loader {
+    border-top-color: #4f46e5; /* indigo-600 */
+    animation: spin 1s ease-in-out infinite;
+}
+
+.disabled-area {
+    pointer-events: none;
+    opacity: 0.6;
+    filter: blur(1px) grayscale(30%);
+    transition: all 0.3s ease;
+}
+
+.disabled-area input,
+.disabled-area textarea,
+.disabled-area canvas,
+.disabled-area button:not(.always-enabled) {
+    pointer-events: none;
+}
+
+/* =================================================================== */
+/* === 2. ANİMASYONLAR (Tümü tek yerde)                            === */
+/* =================================================================== */
+
+@keyframes spin { 
+    to { transform: rotate(360deg); } 
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@keyframes scaleIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-6px); }
+    20%, 40%, 60%, 80% { transform: translateX(6px); }
+}
+
+@keyframes tada {
+    0% { transform: scale(1); }
+    10%, 20% { transform: scale(0.95) rotate(-3deg); }
+    30%, 50%, 70%, 90% { transform: scale(1.1) rotate(3deg); }
+    40%, 60%, 80% { transform: scale(1.1) rotate(-3deg); }
+    100% { transform: scale(1) rotate(0); }
+}
+
+@keyframes hintGlow {
+    from { border-color: #fcd34d; box-shadow: 0 0 5px rgba(252, 211, 77, 0.3); }
+    to { border-color: #f59e0b; box-shadow: 0 0 15px rgba(245, 158, 11, 0.5); }
+}
+
+@keyframes priorityGlow {
+    0% { box-shadow: 0 0 0 rgba(99, 102, 241, 0); }
+    50% { box-shadow: 0 0 10px rgba(99, 102, 241, 0.3); }
+    100% { box-shadow: 0 0 0 rgba(99, 102, 241, 0); }
+}
+
+/* Animasyon sınıfları */
+.animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+.animate-fade-out { animation: fadeOut 0.3s ease-in forwards; }
+.animate-scale-in { animation: scaleIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+.animate-incorrect { animation: shake 0.6s ease-in-out; }
+.animate-correct { animation: tada 0.8s ease-in-out; }
+
+/* =================================================================== */
+/* === 3. BUTON STİLLERİ (Genel, Mod ve Araç Butonları)            === */
+/* =================================================================== */
+
+.btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    font-weight: 600;
+    padding: 0.7rem 1.2rem;
+    border-radius: 0.75rem;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    border: 1px solid transparent;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-align: center;
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.btn-primary {
+    background-image: linear-gradient(to right, #4f46e5 0%, #818cf8 100%);
+    color: white;
+    box-shadow: 0 4px 15px -5px rgba(79, 70, 229, 0.5);
+}
+
+.btn-primary:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 7px 20px -5px rgba(79, 70, 229, 0.6);
+}
+
+.btn-secondary {
+    background-color: #374151; /* gray-700 */
+    color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background-color: #1f2937; /* gray-800 */
+    transform: translateY(-2px);
+}
+
+.btn-tertiary {
+    background-color: #e5e7eb; /* gray-200 */
+    color: #1f2937;
+    border-color: #d1d5db;
+}
+
+.btn-tertiary:hover:not(:disabled) {
+    background-color: #d1d5db; /* gray-300 */
+    border-color: #9ca3af;
+}
+
+/* Soru giriş ekranındaki mod butonları (Fotoğraf, El Yazısı) */
+.mode-btn-active {
+    background-image: linear-gradient(to right, #4f46e5, #7c3aed);
+    color: white;
+    box-shadow: 0 2px 8px -1px rgba(0,0,0,0.2);
+    transform: scale(1.05);
+}
+
+/* Canvas araç butonları (Kalem, Silgi) */
+.tool-btn-active {
+    background-color: #4f46e5;
+    color: white;
+    transform: scale(1.1);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+}
+
+/* İşlem sırasında pasif hale getirilen butonlar */
+.disabled-btn {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.disabled-btn:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* =================================================================== */
+/* === 4. KANVAS ve GİRİŞ ALANLARI STİLLERİ                        === */
+/* =================================================================== */
+
+#handwritingCanvas,
+#guide-handwriting-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+#guide-pen-btn.canvas-tool-active,
+#guide-eraser-btn.canvas-tool-active {
+    background-color: #4f46e5 !important;
+    color: white !important;
+}
+
+textarea[readonly] {
+    background-color: #f3f4f6;
+    cursor: not-allowed;
+}
+
+/* =================================================================== */
+/* ===           5. NİHAİ RENDER SİSTEMİ STİLLERİ                  === */
+/* =================================================================== */
+
+/* ANA KURAL: .smart-content, tüm metin ve LaTeX akışının ana taşıyıcısıdır.
+   Satır yüksekliği gibi temel stiller burada tanımlanır.
+*/
+.smart-content {
+    line-height: 2;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* NİHAİ ÇÖZÜM: AKICI METİN MİMARİSİ
+   Bu kurallar, birleştirilmiş metin ve formüllerin bir ders kitabı gibi
+   doğal bir akış içinde, aynı satırda ve doğru dikey hizada görünmesini sağlar.
+*/
+
+/* Render motoru tarafından oluşturulan metin ve LaTeX parçalarını hedefler. */
+.smart-content .text-part,
+.smart-content .latex-part {
+    display: inline-block;      /* Yan yana durmalarını sağlar */
+    vertical-align: middle;     /* Metin ve formülü dikeyde ortalar */
+    margin-right: 0.25em;       /* Parçalar arasına hafif boşluk ekler */
+    line-height: 1;             /* Kendi iç satır yüksekliklerini sıfırlar */
+}
+
+/* MathJax tarafından render edilen formülün kendisinin de bu akışa uymasını garanti eder. */
+.smart-content .MathJax,
+.smart-content .MathJax_Display,
+.smart-content mjx-container {
+    display: inline-block !important;
+    margin: 0 !important;
+    vertical-align: middle !important;
+}
+
+/* Render type'larına göre ek kozmetik stiller (isteğe bağlı) */
+.rendered-text {
+    color: #1f2937;
+}
+
+.rendered-pure_latex {
+    font-family: 'Computer Modern', 'Times New Roman', serif;
+    text-align: center;
+    margin: 0.5rem auto; /* Otomatik ortalama için */
+    display: block; /* Tek başına duran LaTeX'in blok olmasını sağlar */
+}
+
+/* Priority render animasyonu */
+.priority-rendered {
+    animation: priorityGlow 0.5s ease-in-out;
+}
+
+/* Render durumları (bekleme ve hata) */
+.render-pending {
+    position: relative;
+    min-height: 1.5em;
+    opacity: 0.5;
+    background: #f0f0f0;
+    border-radius: 4px;
+    padding: 2px 4px;
+    display: inline-block;
+}
+
+.render-pending::after {
+    content: "⏳";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.2em;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+.render-error {
+    color: #dc2626;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+    font-family: monospace;
+    font-size: 0.875em;
+    display: inline-block;
+}
+
+/* =================================================================== */
+/* === 6. ÇOKTAN SEÇMELİ SEÇENEK STİLLERİ (İnteraktif Çözüm)        === */
+/* =================================================================== */
+
+.option-label {
+    display: flex;
+    align-items: flex-start;
+    padding: 1rem;
+    border-width: 2px;
+    border-color: #e5e7eb; /* gray-200 */
+    border-radius: 0.75rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.option-label:hover {
+    background-color: #f8fafc; /* slate-50 */
+    border-color: #6366f1; /* indigo-500 */
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.option-letter {
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+    margin-right: 0.75rem;
+    border-radius: 50%;
+    background-color: #e5e7eb;
+    color: #4b5563;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    transition: all 0.2s ease;
+}
+
+.option-label:hover .option-letter {
+    background-color: #6366f1;
+    color: white;
+}
+
+/* Seçim durumuna göre renkler */
+.option-label.border-blue-500 { 
+    border-color: #3b82f6 !important; 
+    background-color: #eff6ff !important; 
+}
+
+.option-label.border-green-500 { 
+    border-color: #10b981 !important; 
+    background-color: #ecfdf5 !important; 
+}
+
+.option-label.border-red-500 { 
+    border-color: #ef4444 !important; 
+    background-color: #fef2f2 !important; 
+}
+
+.option-label.border-blue-500 .option-letter,
+.option-label.border-green-500 .option-letter,
+.option-label.border-red-500 .option-letter {
+    color: white;
+}
+
+.option-label.border-blue-500 .option-letter { background-color: #3b82f6; }
+.option-label.border-green-500 .option-letter { background-color: #10b981; }
+.option-label.border-red-500 .option-letter { background-color: #ef4444; }
+
+/* Seçeneklerin içeriği için özel düzenlemeler */
+.option-content {
+    min-width: 0; 
+}
+
+.option-text.smart-content {
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: thin;
+    scrollbar-color: #a5b4fc #e0e7ff;
+    min-height: 1.5em;
+    display: block;
+    position: relative;
+}
+
+.option-text.smart-content::-webkit-scrollbar {
+    height: 6px;
+}
+
+.option-text.smart-content::-webkit-scrollbar-thumb {
+    background-color: #a5b4fc;
+    border-radius: 3px;
+}
+
+.option-text.math-rendered {
+    text-align: left;
+}
+
+/* =================================================================== */
+/* === 7. İNTERAKTİF ÇÖZÜM ve AKILLI REHBER ORTAK STİLLERİ         === */
+/* =================================================================== */
+
+/* İlerleme Çubuğu */
+.progress-fill {
+    background: linear-gradient(90deg, #3B82F6 0%, #1D4ED8 100%);
+    transition: width 0.5s ease-in-out;
+}
+
+/* Deneme Hakkı Göstergesi */
+.attempt-dots > div {
+    transition: background-color 0.3s ease;
+}
+
+/* Geri Bildirim Mesajları (Doğru/Yanlış) */
+.feedback-message {
+    animation: fadeIn 0.4s ease-out;
+    font-size: 0.875rem;
+}
+
+.feedback-close {
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.feedback-close:hover {
+    transform: scale(1.1);
+}
+
+/* Çözüm Tamamlandı Ekranı */
+.interactive-completion, 
+.completion-message {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.stat-card, 
+.stat-item {
+    transition: all 0.2s ease;
+}
+
+.stat-card:hover, 
+.stat-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.1);
+}
+
+/* =================================================================== */
+/* === 8. AKILLI REHBER ("KENDİM ÇÖZECEĞİM") ÖZEL STİLLERİ         === */
+/* =================================================================== */
+
+/* Çözüm Yol Haritası (Roadmap) */
+.roadmap-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-in-out;
+}
+
+.roadmap-content:not(.hidden) {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.roadmap-step-item.current-step {
+    background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
+    border-color: #3b82f6;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
+}
+
+/* İpucu Önizleme Alanı */
+.hint-preview-area {
+    border-style: dashed;
+    border-width: 2px;
+    animation: hintGlow 2s ease-in-out infinite alternate;
+}
+
+/* =================================================================== */
+/* === 9. MATEMATİK SEMBOL PANELİ STİLLERİ                         === */
+/* =================================================================== */
+
+.math-symbol-panel {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.1);
+    border: 1px solid #bae6fd;
+    transition: all 0.3s ease;
+}
+
+/* Kategori Butonları */
+.category-btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    background-color: #fff;
+    color: #4b5563;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.category-btn:hover {
+    background-color: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+.category-btn.active {
+    background-color: #3B82F6;
+    color: white;
+    border-color: #2563EB;
+    box-shadow: 0 2px 5px -1px rgba(59,130,246,0.3);
+}
+
+/* Sembol Butonları */
+.symbol-btn, 
+.quick-symbol-btn {
+    padding: 0.75rem;
+    font-size: 1.125rem;
+    background-color: white;
+    color: #374151;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 3rem;
+}
+
+.symbol-btn:hover, 
+.quick-symbol-btn:hover {
+    border-color: #3B82F6;
+    background-color: #eff6ff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px -2px rgba(0, 0, 0, 0.1);
+}
+
+/* =================================================================== */
+/* === 10. OKUNURLUK VE TAŞMA SORUNU ÇÖZÜMLERİ                    === */
+/* =================================================================== */
+
+/* Math container genel düzenlemesi */
+.math-container {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.5rem 0.2rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #a5b4fc #e0e7ff;
+}
+
+/* Webkit tabanlı tarayıcılar için kaydırma çubuğu */
+.math-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.math-container::-webkit-scrollbar-track {
+    background: #e0e7ff;
+    border-radius: 4px;
+}
+
+.math-container::-webkit-scrollbar-thumb {
+    background-color: #a5b4fc;
+    border-radius: 4px;
+    border: 2px solid #e0e7ff;
+}
+
+.math-container::-webkit-scrollbar-thumb:hover {
+    background-color: #818cf8;
+}
+
+/* Genel scrollbar stilleri */
+.scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #9CA3AF #E5E7EB;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+    background: #F3F4F6;
+    border-radius: 10px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: #9CA3AF;
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: #6B7280;
+}
+
+/* Açıklama metinlerinin daha iyi görünmesi için */
+.step-description, 
+.step-hint-content {
+    color: #374151;
+    font-size: 0.95rem;
+}
+
+/* Math focus durumu */
+.math-focus .math-rendered {
+    background-color: #fef9c3;
+    border-radius: 5px;
+    padding: 0 4px;
+    border: 1px solid #fde047;
+    transition: all 0.3s ease;
+}
+
+/* =================================================================== */
+/* === 11. RESPONSİVE (MOBİL UYUMLULUK) DÜZENLEMELERİ               === */
+/* =================================================================== */
+
+@media (max-width: 768px) {
+    /* Genel küçültmeler */
+    .btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
+    }
+
+    /* İnteraktif ve Rehber alanları */
+    .interactive-solution-workspace, 
+    .smart-guide-workspace, 
+    .test-control-panel {
+        padding: 1rem;
+    }
+    
+    .option-label {
+        padding: 0.75rem;
+    }
+
+    .option-letter {
+        width: 1.75rem;
+        height: 1.75rem;
+        font-size: 0.8rem;
+    }
+
+    /* Tamamlandı ekranı */
+    .stats-grid, 
+    .performance-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+
+    /* Sembol paneli */
+    .category-btn {
+        padding: 0.375rem 0.5rem;
+        font-size: 0.75rem;
+    }
+
+    /* Math container mobil optimizasyonu */
+    .math-container {
+        padding: 0.25rem 0.1rem;
+    }
+
+    /* Render edilen matematik için mobil optimizasyonu */
+    .rendered-pure_latex {
+        font-size: 0.9em;
+    }
+
+    .option-text.smart-content {
+        font-size: 0.9em;
+    }
+}
+
+/* MathJax SVG fix */
+.math-rendered svg {
+    max-width: 100% !important;
+    height: auto !important;
+}
+
+/* SVG render hatası fallback */
+.math-rendered svg[viewbox*="NaN"],
+.math-rendered svg[viewBox*="NaN"] {
+    display: none !important;
+}
+
+.math-rendered svg[viewbox*="NaN"] + *,
+.math-rendered svg[viewBox*="NaN"] + * {
+    display: inline !important;
+}
+
+/* Render error durumunda */
+.render-error {
+    display: inline-block !important;
+    background: #fef2f2 !important;
+    color: #dc2626 !important;
+    padding: 4px 8px !important;
+    border-radius: 4px !important;
+    border: 1px solid #fecaca !important;
+    font-family: monospace !important;
+}
+
+/* =================================================================================
+   ✅ KARIŞIK İÇERİK (METİN + LATEX) GÖSTERİM DÜZELTMESİ
+   =================================================================================
+   Bu kurallar, renderMixedContent tarafından oluşturulan metin ve LaTeX 
+   parçalarının her zaman yan yana ve aynı hizada durmasını sağlar.
+*/
+
+.mixed-content-container {
+    /* Konteynerin kendisine özel bir stil gerekirse buraya eklenebilir. */
+    line-height: 1.8; /* Satır yüksekliğini artırarak formüllerin metni sıkıştırmasını önler */
+}
+
+/*
+  Metin parçalarını ve LaTeX parçalarını içeren span'ları hedefler.
+  display: inline-block -> Yan yana durmalarını sağlar.
+  vertical-align: middle -> Metin ve formülün dikeyde ortalanmasını sağlar.
+*/
+.mixed-content-container .text-part,
+.mixed-content-container .latex-part {
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 4px; /* Parçalar arasına çok hafif bir boşluk ekler */
+}
+
+/*
+  MathJax tarafından render edilen formülün kendisinin de
+  bazen alt satıra geçmesini engellemek için ek bir güvenlik katmanı.
+*/
+.latex-part .mjx-chtml {
+    display: inline-block !important;
+}
+
+/* Tam çözüm modu için inline düzeltmesi */
+.step-combined-content {
+    line-height: 2;
+}
+
+.step-combined-content .text-part,
+.step-combined-content .latex-part {
+    display: inline-block !important;
+    vertical-align: middle !important;
+    margin: 0 4px !important;
+}
+
+/* MathJax render edilen elementler için */
+.step-combined-content .MathJax,
+.step-combined-content .MathJax_Display {
+    display: inline-block !important;
+    margin: 0 !important;
+    vertical-align: middle !important;
+}
+
+.step-combined-content mjx-container {
+    display: inline-block !important;
+    margin: 0 4px !important;
+    vertical-align: middle !important;
+}
+
