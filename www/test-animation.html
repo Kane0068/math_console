@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animasyon Sistemi Testi</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        .btn {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 5px;
+            transition: transform 0.2s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+        }
+        .loading-messages {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .code-block {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 Animasyon Sistemi Testi</h1>
+        
+        <div class="test-section">
+            <h3>🚀 Test 1: Hızlı API Yanıtı (1 saniye)</h3>
+            <p>Bu test, API'nin hızlı yanıt verdiği durumu simüle eder. Animasyon minimum 1 saniye gösterilir.</p>
+            <button class="btn" onclick="testFastAPI()">Hızlı API Testi</button>
+            <div id="result1" class="result hidden"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>⏳ Test 2: Yavaş API Yanıtı (3 saniye)</h3>
+            <p>Bu test, API'nin yavaş yanıt verdiği durumu simüle eder. Animasyon API yanıtı gelene kadar devam eder.</p>
+            <button class="btn" onclick="testSlowAPI()">Yavaş API Testi</button>
+            <div id="result2" class="result hidden"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔄 Test 3: Çoklu Mesaj Animasyonu</h3>
+            <p>Bu test, birden fazla mesajın sırayla gösterildiği animasyonu test eder.</p>
+            <button class="btn" onclick="testMultipleMessages()">Çoklu Mesaj Testi</button>
+            <div id="result3" class="result hidden"></div>
+        </div>
+
+        <div class="loading-messages">
+            <h4>📋 Test Edilen Loading Mesajları:</h4>
+            <ul>
+                <li>Çözüm stratejisi belirleniyor...</li>
+                <li>Adımlar oluşturuluyor...</li>
+                <li>Son kontroller yapılıyor...</li>
+                <li>Soru Özeti Gösteriliyor...</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>💡 Nasıl Çalışıyor?</h3>
+            <div class="code-block">
+// 1. Animasyon başlatılır
+const animationPromise = showTemporaryMessage(loadingMessages, '⚙️', 1000);
+
+// 2. API çağrısı yapılır
+const apiCallPromise = getUnifiedSolution(problemContext, imageBase64);
+
+// 3. API yanıtı geldiğinde animasyon durdurulur
+apiCallPromise.then(() => {
+    if (window.currentLoadingOverlay && window.currentLoadingOverlay.markAsReady) {
+        window.currentLoadingOverlay.markAsReady();
+    }
+});
+
+// 4. Her ikisi de tamamlandığında devam edilir
+const [unifiedSolution] = await Promise.all([apiCallPromise, animationPromise]);
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Test fonksiyonları
+        async function testFastAPI() {
+            const resultDiv = document.getElementById('result1');
+            resultDiv.innerHTML = '<strong>Test başlatıldı...</strong>';
+            resultDiv.classList.remove('hidden');
+
+            try {
+                // Hızlı API simülasyonu (1 saniye)
+                const apiPromise = new Promise(resolve => setTimeout(resolve, 1000));
+                const animationPromise = showTemporaryMessage(
+                    ['Çözüm stratejisi belirleniyor...', 'Adımlar oluşturuluyor...', 'Son kontroller yapılıyor...', 'Soru Özeti Gösteriliyor...'],
+                    '⚙️',
+                    1000
+                );
+
+                // API yanıtı geldiğinde animasyonu durdur
+                apiPromise.then(() => {
+                    if (window.currentLoadingOverlay && window.currentLoadingOverlay.markAsReady) {
+                        window.currentLoadingOverlay.markAsReady();
+                    }
+                });
+
+                await Promise.all([apiPromise, animationPromise]);
+                resultDiv.innerHTML = '<strong>✅ Test başarılı!</strong><br>Hızlı API yanıtı (1s) ve animasyon senkronize çalıştı.';
+            } catch (error) {
+                resultDiv.innerHTML = '<strong>❌ Test başarısız!</strong><br>Hata: ' + error.message;
+            }
+        }
+
+        async function testSlowAPI() {
+            const resultDiv = document.getElementById('result2');
+            resultDiv.innerHTML = '<strong>Test başlatıldı...</strong>';
+            resultDiv.classList.remove('hidden');
+
+            try {
+                // Yavaş API simülasyonu (3 saniye)
+                const apiPromise = new Promise(resolve => setTimeout(resolve, 3000));
+                const animationPromise = showTemporaryMessage(
+                    ['Çözüm stratejisi belirleniyor...', 'Adımlar oluşturuluyor...', 'Son kontroller yapılıyor...', 'Soru Özeti Gösteriliyor...'],
+                    '⚙️',
+                    1000
+                );
+
+                // API yanıtı geldiğinde animasyonu durdur
+                apiPromise.then(() => {
+                    if (window.currentLoadingOverlay && window.currentLoadingOverlay.markAsReady) {
+                        window.currentLoadingOverlay.markAsReady();
+                    }
+                });
+
+                await Promise.all([apiPromise, animationPromise]);
+                resultDiv.innerHTML = '<strong>✅ Test başarılı!</strong><br>Yavaş API yanıtı (3s) ve animasyon senkronize çalıştı.';
+            } catch (error) {
+                resultDiv.innerHTML = '<strong>❌ Test başarısız!</strong><br>Hata: ' + error.message;
+            }
+        }
+
+        async function testMultipleMessages() {
+            const resultDiv = document.getElementById('result3');
+            resultDiv.innerHTML = '<strong>Test başlatıldı...</strong>';
+            resultDiv.classList.remove('hidden');
+
+            try {
+                const animationPromise = showTemporaryMessage(
+                    ['Mesaj 1: Başlangıç...', 'Mesaj 2: İşlem devam ediyor...', 'Mesaj 3: Neredeyse tamam...', 'Mesaj 4: Tamamlandı!'],
+                    '🎯',
+                    2000
+                );
+
+                // 2 saniye sonra animasyonu durdur
+                setTimeout(() => {
+                    if (window.currentLoadingOverlay && window.currentLoadingOverlay.markAsReady) {
+                        window.currentLoadingOverlay.markAsReady();
+                    }
+                }, 2000);
+
+                await animationPromise;
+                resultDiv.innerHTML = '<strong>✅ Test başarılı!</strong><br>Çoklu mesaj animasyonu düzgün çalıştı.';
+            } catch (error) {
+                resultDiv.innerHTML = '<strong>❌ Test başarısız!</strong><br>Hata: ' + error.message;
+            }
+        }
+
+        // showTemporaryMessage fonksiyonunu simüle et (test için)
+        function showTemporaryMessage(messages, icon = '🚀', minDuration = 2000) {
+            return new Promise(resolve => {
+                const messageArray = Array.isArray(messages) ? messages : [messages];
+                let currentIndex = 0;
+                let isResolved = false;
+                
+                const overlay = document.createElement('div');
+                overlay.id = 'temporary-message-overlay';
+                overlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                
+                overlay.innerHTML = `
+                    <div class="flex flex-col items-center gap-4 bg-white rounded-2xl shadow-xl p-8 w-72">
+                        <div class="text-6xl">${icon}</div>
+                        <p id="dynamic-message-p" class="text-lg font-semibold text-gray-800 text-center h-14 flex items-center justify-center">${messageArray[0]}</p>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div id="progress-bar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                        <div class="flex items-center space-x-2 text-sm text-gray-500">
+                            <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                            <span>API yanıtı bekleniyor...</span>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+                
+                const pElement = document.getElementById('dynamic-message-p');
+                const progressBar = document.getElementById('progress-bar');
+
+                const updateMessage = () => {
+                    if (!pElement || isResolved) return;
+                    
+                    pElement.style.opacity = '0';
+                    setTimeout(() => {
+                        if (!isResolved) {
+                            pElement.textContent = messageArray[currentIndex];
+                            pElement.style.opacity = '1';
+                            
+                            const progress = ((currentIndex + 1) / messageArray.length) * 100;
+                            progressBar.style.width = `${progress}%`;
+                        }
+                    }, 200);
+                };
+
+                let messageInterval = setInterval(() => {
+                    if (!isResolved) {
+                        currentIndex = (currentIndex + 1) % messageArray.length;
+                        updateMessage();
+                    }
+                }, 1500);
+
+                let minDurationElapsed = false;
+                setTimeout(() => {
+                    minDurationElapsed = true;
+                    checkIfReadyToResolve();
+                }, minDuration);
+
+                const markAsReady = () => {
+                    if (!isResolved) {
+                        isResolved = true;
+                        checkIfReadyToResolve();
+                    }
+                };
+
+                const checkIfReadyToResolve = () => {
+                    if (minDurationElapsed && isResolved) {
+                        if (messageInterval) clearInterval(messageInterval);
+                        
+                        overlay.querySelector('.text-6xl').textContent = '✅';
+                        overlay.querySelector('.text-sm').innerHTML = '<span class="text-green-600">✓ Tamamlandı!</span>';
+                        
+                        setTimeout(() => {
+                            if (overlay.parentNode) {
+                                overlay.remove();
+                            }
+                            resolve();
+                        }, 500);
+                    }
+                };
+
+                overlay.markAsReady = markAsReady;
+                window.currentLoadingOverlay = overlay;
+            });
+        }
+    </script>
+</body>
+</html>

@@ -45,6 +45,117 @@ body {
 /* === 2. ANİMASYONLAR (Tümü tek yerde)                            === */
 /* =================================================================== */
 
+/* =================================================================== */
+/* === KAMERA ÖNİZLEME STİLLERİ                                     === */
+/* =================================================================== */
+
+/* Fotoğraf önizleme stilleri */
+#imagePreview {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    /* Fotoğraf döndürme sonrası düzgün görünüm için */
+    object-fit: contain;
+    background-color: #f8fafc;
+    border: 2px solid #e2e8f0;
+}
+
+/* Döndürme butonu için özel stil */
+#rotatePhotoBtn {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+#rotatePhotoBtn:hover {
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+/* Fotoğraf önizleme konteyneri */
+#preview-container {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: 1px solid #d1d5db;
+}
+
+#camera-preview-container {
+    animation: fadeIn 0.3s ease-out;
+    display: none; /* Başlangıçta gizli */
+}
+
+#camera-preview-container:not(.hidden) {
+    display: block !important; /* Hidden class'ı yoksa göster - !important ile */
+}
+
+/* Tailwind hidden class'ı ile çakışmayı önle */
+#camera-preview-container.hidden {
+    display: none !important;
+}
+
+#camera-preview {
+    width: 100%;
+    max-width: 400px;
+    height: auto;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+#question-frame {
+    position: absolute;
+    top: 15%;
+    left: 10%;
+    width: 80%;
+    height: 70%;
+    border: 3px solid #3b82f6;
+    background-color: rgba(59, 130, 246, 0.15);
+    border-radius: 0.5rem;
+    pointer-events: none;
+    z-index: 10;
+}
+
+#question-frame > div {
+    position: absolute;
+    top: -1.5rem;
+    left: 0;
+    background-color: #3b82f6;
+    color: white;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    white-space: nowrap;
+}
+
+#capture-btn {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+#capture-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+}
+
+#close-camera-btn {
+    background-color: #6b7280;
+    color: white;
+    border: none;
+}
+
+#close-camera-btn:hover {
+    background-color: #4b5563;
+    transform: translateY(-2px);
+}
+
+
+
 @keyframes spin { 
     to { transform: rotate(360deg); } 
 }
@@ -57,6 +168,33 @@ body {
 @keyframes fadeInUp {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.animate-fade-out {
+    animation: fadeOut 0.3s ease-out;
+}
+
+.animate-scale-in {
+    animation: scaleIn 0.3s ease-out;
 }
 
 @keyframes fadeOut {
@@ -98,6 +236,51 @@ body {
 .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
 .animate-fade-out { animation: fadeOut 0.3s ease-in forwards; }
 .animate-scale-in { animation: scaleIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+
+/* =================================================================== */
+/* === 3. CHAT BUBBLE STİLLERİ (Telegram/WhatsApp Benzeri)         === */
+/* =================================================================== */
+
+.chat-bubble {
+    animation: fadeInUp 0.4s ease-out forwards;
+    transform: translateY(10px);
+    opacity: 0;
+}
+
+.chat-bubble.animate-in {
+    animation: fadeInUp 0.4s ease-out forwards;
+}
+
+.chat-bubble.animate-out {
+    animation: fadeOut 0.3s ease-in forwards;
+}
+
+/* Chat bubble hover efektleri */
+.chat-bubble:hover {
+    transform: translateY(-2px);
+    transition: transform 0.2s ease;
+}
+
+/* Symbol button stilleri */
+.symbol-btn {
+    @apply px-3 py-2 rounded-lg font-mono text-lg transition-all duration-200;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border: 1px solid #e2e8f0;
+    min-width: 40px;
+    text-align: center;
+}
+
+.symbol-btn:hover {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    border-color: #3b82f6;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.symbol-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.1);
+}
 .animate-incorrect { animation: shake 0.6s ease-in-out; }
 .animate-correct { animation: tada 0.8s ease-in-out; }
 
@@ -665,6 +848,31 @@ textarea[readonly] {
     .option-text.smart-content {
         font-size: 0.9em;
     }
+    
+    /* Matematik render mobil optimizasyonu */
+    .math-rendered,
+    .mjx-container,
+    .mjx-chtml {
+        font-size: 0.9em !important;
+    }
+    
+    /* Akıllı rehber mobil optimizasyonu */
+    .smart-guide-workspace .smart-content,
+    .roadmap-content .smart-content {
+        font-size: 0.85rem !important;
+    }
+    
+    .roadmap-step-item {
+        font-size: 0.8rem !important;
+    }
+    
+    .roadmap-step-item .step-title {
+        font-size: 0.9rem !important;
+    }
+    
+    .roadmap-step-item .step-description {
+        font-size: 0.75rem !important;
+    }
 }
 
 /* MathJax SVG fix */
@@ -673,15 +881,175 @@ textarea[readonly] {
     height: auto !important;
 }
 
-/* SVG render hatası fallback */
+/* =================================================================== */
+/* === MATEMATİK RENDER STİLLERİ (Eksik olanlar)                    === */
+/* =================================================================== */
+
+/* Render edilen matematik için temel stiller - GÜÇLENDİRİLDİ */
+.math-rendered {
+    display: inline-block;
+    vertical-align: middle;
+    max-width: 100%;
+    overflow-x: auto; /* Sadece gerektiğinde scrollbar göster */
+    overflow-y: hidden; /* Dikey scrollbar'ı gizle */
+    font-size: 1em; /* Varsayılan boyut */
+}
+
+/* Render edilen metin için temel stiller - GÜÇLENDİRİLDİ */
+.rendered-text {
+    display: inline-block;
+    vertical-align: middle;
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    font-size: 1em;
+    line-height: 1.6;
+    color: #1f2937;
+}
+
+/* Render edilen inline matematik için temel stiller - GÜÇLENDİRİLDİ */
+.rendered-inline_math {
+    display: inline-block;
+    vertical-align: middle;
+    max-width: 100%;
+    overflow-x: auto; /* Sadece gerektiğinde scrollbar göster */
+    overflow-y: hidden; /* Dikey scrollbar'ı gizle */
+    font-size: 1em;
+    margin: 0 0.25em;
+}
+
+/* Render edilen mixed content için temel stiller - GÜÇLENDİRİLDİ */
+.rendered-mixed_content {
+    display: inline-block;
+    vertical-align: middle;
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    font-size: 1em;
+    line-height: 1.6;
+}
+
+/* Render edilen pure LaTeX için temel stiller - GÜÇLENDİRİLDİ */
+.rendered-pure_latex {
+    display: inline-block;
+    vertical-align: middle;
+    max-width: 100%;
+    overflow-x: auto; /* Sadece gerektiğinde scrollbar göster */
+    overflow-y: hidden; /* Dikey scrollbar'ı gizle */
+    font-size: 1em;
+    margin: 0.5rem auto;
+    text-align: center;
+}
+
+/* MathJax container stilleri - GÜÇLENDİRİLDİ */
+.mjx-container {
+    display: inline-block !important;
+    margin: 0 0.25em !important;
+    vertical-align: middle !important;
+    font-size: 1em !important;
+    overflow-x: auto !important; /* Sadece gerektiğinde scrollbar göster */
+    overflow-y: hidden !important; /* Dikey scrollbar'ı gizle */
+}
+
+/* MathJax HTML stilleri - GÜÇLENDİRİLDİ */
+.mjx-chtml {
+    display: inline-block !important;
+    margin: 0 !important;
+    vertical-align: middle !important;
+    font-size: 1em !important;
+    overflow-x: auto !important; /* Sadece gerektiğinde scrollbar göster */
+    overflow-y: hidden !important; /* Dikey scrollbar'ı gizle */
+}
+
+/* MathJax Display stilleri (blok formüller için) */
+.mjx-chtml[style*="display: block"] {
+    display: block !important;
+    margin: 0.5em auto !important;
+    text-align: center !important;
+}
+
+/* MathJax SVG stilleri */
+.mjx-svg {
+    max-width: 100% !important;
+    height: auto !important;
+    vertical-align: middle !important;
+}
+
+/* =================================================================== */
+/* === AKILLI REHBER YAZI BOYUTU DÜZELTMESİ                          === */
+/* =================================================================== */
+
+/* Akıllı rehber kısmındaki yazılar için boyut kontrolü - GÜÇLENDİRİLDİ */
+.smart-guide-workspace .smart-content,
+.roadmap-content .smart-content,
+.step-description,
+.step-hint-content {
+    font-size: 1rem !important; /* Minimum boyut artırıldı */
+    line-height: 1.6 !important;
+    max-width: 100% !important;
+}
+
+/* Roadmap adımları için yazı boyutu kontrolü - GÜÇLENDİRİLDİ */
+.roadmap-step-item {
+    font-size: 1rem !important; /* Minimum boyut artırıldı */
+}
+
+.roadmap-step-item .step-title {
+    font-size: 1.1rem !important; /* Minimum boyut artırıldı */
+    font-weight: 600;
+}
+
+.roadmap-step-item .step-description {
+    font-size: 0.95rem !important; /* Minimum boyut artırıldı */
+    line-height: 1.5 !important;
+}
+
+/* İpucu alanları için yazı boyutu kontrolü - GÜÇLENDİRİLDİ */
+.hint-preview-area {
+    font-size: 1rem !important; /* Minimum boyut artırıldı */
+    line-height: 1.5 !important;
+}
+
+/* Çözüm adımları için yazı boyutu kontrolü - GÜÇLENDİRİLDİ */
+.solution-step {
+    font-size: 1rem !important; /* Minimum boyut artırıldı */
+    line-height: 1.6 !important;
+}
+
+.solution-step .step-content {
+    font-size: 1rem !important; /* Minimum boyut artırıldı */
+    line-height: 1.5 !important;
+}
+
+/* SVG render hatası fallback - GÜÇLENDİRİLDİ */
 .math-rendered svg[viewbox*="NaN"],
-.math-rendered svg[viewBox*="NaN"] {
+.math-rendered svg[viewBox*="NaN"],
+.math-rendered svg[width*="NaN"],
+.math-rendered svg[height*="NaN"],
+.math-rendered svg[viewbox*="undefined"],
+.math-rendered svg[viewBox*="undefined"],
+.math-rendered svg[viewbox*="Infinity"],
+.math-rendered svg[viewBox*="Infinity"] {
     display: none !important;
 }
 
 .math-rendered svg[viewbox*="NaN"] + *,
-.math-rendered svg[viewBox*="NaN"] + * {
+.math-rendered svg[viewBox*="NaN"] + *,
+.math-rendered svg[width*="NaN"] + *,
+.math-rendered svg[height*="NaN"] + * {
     display: inline !important;
+}
+
+/* SVG hata durumunda fallback metin stilleri */
+.math-rendered.svg-fallback {
+    background-color: #fef3c7 !important;
+    border: 1px solid #f59e0b !important;
+    color: #92400e !important;
+    padding: 0.5rem !important;
+    border-radius: 0.375rem !important;
+    font-family: 'Courier New', monospace !important;
+    font-size: 0.875rem !important;
+    display: inline-block !important;
 }
 
 /* Render error durumunda */
@@ -695,16 +1063,79 @@ textarea[readonly] {
     font-family: monospace !important;
 }
 
+/* =================================================================== */
+/* === GENEL MATEMATİK RENDER STİLLERİ                               === */
+/* =================================================================== */
+
+/* Tüm matematik render elementleri için genel stil - GÜÇLENDİRİLDİ */
+.math-rendered,
+.mjx-container,
+.mjx-chtml,
+.mjx-svg,
+.MathJax,
+.MathJax_Display {
+    max-width: 100% !important;
+    overflow-x: auto !important; /* Sadece gerektiğinde scrollbar göster */
+    overflow-y: hidden !important; /* Dikey scrollbar'ı gizle */
+    font-size: 1em !important;
+}
+
+/* Inline matematik için */
+.math-rendered.inline,
+.mjx-container[data-math-type="inline"] {
+    display: inline-block !important;
+    vertical-align: middle !important;
+    margin: 0 0.25em !important;
+}
+
+/* Blok matematik için */
+.math-rendered.block,
+.mjx-container[data-math-type="block"],
+.MathJax_Display {
+    display: block !important;
+    margin: 0.5em auto !important;
+    text-align: center !important;
+}
+
+/* Matematik container'ları için */
+.math-container {
+    max-width: 100%;
+    overflow-x: auto;
+    padding: 0.5rem 0;
+}
+
+/* Matematik scrollbar stilleri */
+.math-container::-webkit-scrollbar {
+    height: 6px;
+}
+
+.math-container::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+
+.math-container::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 3px;
+}
+
+.math-container::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8;
+}
+
 /* =================================================================================
-   ✅ KARIŞIK İÇERİK (METİN + LATEX) GÖSTERİM DÜZELTMESİ
+   ✅ KARIŞIK İÇERİK (METİN + LATEX) GÖSTERİM DÜZELTMESİ - GÜÇLENDİRİLDİ
    =================================================================================
    Bu kurallar, renderMixedContent tarafından oluşturulan metin ve LaTeX 
    parçalarının her zaman yan yana ve aynı hizada durmasını sağlar.
+   Türkçe karakter desteği ve SVG hata yakalama sistemi dahil.
 */
 
 .mixed-content-container {
     /* Konteynerin kendisine özel bir stil gerekirse buraya eklenebilir. */
     line-height: 1.8; /* Satır yüksekliğini artırarak formüllerin metni sıkıştırmasını önler */
+    word-wrap: break-word; /* Uzun Türkçe kelimeler için */
+    overflow-wrap: break-word; /* Modern tarayıcı desteği */
 }
 
 /*
@@ -714,9 +1145,11 @@ textarea[readonly] {
 */
 .mixed-content-container .text-part,
 .mixed-content-container .latex-part {
-    display: inline-block;
-    vertical-align: middle;
+    display: inline-block !important;
+    vertical-align: middle !important;
     margin-right: 4px; /* Parçalar arasına çok hafif bir boşluk ekler */
+    max-width: 100%; /* Taşma kontrolü */
+    overflow-wrap: break-word; /* Uzun kelimeler için */
 }
 
 /*
@@ -725,6 +1158,30 @@ textarea[readonly] {
 */
 .latex-part .mjx-chtml {
     display: inline-block !important;
+    vertical-align: middle !important;
+    max-width: 100% !important;
+}
+
+/* SVG render hatası fallback stilleri */
+.svg-fallback {
+    background-color: #fef3c7 !important;
+    border: 1px solid #f59e0b !important;
+    color: #92400e !important;
+    padding: 0.5rem !important;
+    border-radius: 0.375rem !important;
+    font-family: 'Courier New', monospace !important;
+    font-size: 0.875rem !important;
+}
+
+/* Türkçe karakter desteği için font optimizasyonu */
+.mixed-content-container .text-part {
+    font-family: 'Inter', 'Segoe UI', 'Roboto', sans-serif;
+    font-feature-settings: 'liga' 1, 'kern' 1; /* Ligature ve kerning */
+}
+
+/* LaTeX parçaları için font optimizasyonu */
+.mixed-content-container .latex-part {
+    font-family: 'Computer Modern', 'Times New Roman', serif;
 }
 
 /* Tam çözüm modu için inline düzeltmesi */
@@ -751,5 +1208,297 @@ textarea[readonly] {
     display: inline-block !important;
     margin: 0 4px !important;
     vertical-align: middle !important;
+}
+
+/* =================================================================================
+   📐 MATEMATİKSEL SEMBOLLER BUTONLARI
+   =================================================================================
+   Klavye giriş modunda lise düzeyinde matematiksel semboller için
+   zarif ve kaydırılabilir buton stilleri
+ */
+
+/* Scroll container - "Kendim Çözeceğim" kısmındaki gibi */
+.math-symbol-scroll-container {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.5rem 0;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #a5b4fc #e0e7ff;
+}
+
+.math-symbol-scroll-container::-webkit-scrollbar {
+    height: 6px;
+}
+
+.math-symbol-scroll-container::-webkit-scrollbar-track {
+    background: #e0e7ff;
+    border-radius: 3px;
+}
+
+.math-symbol-scroll-container::-webkit-scrollbar-thumb {
+    background-color: #a5b4fc;
+    border-radius: 3px;
+    border: 1px solid #e0e7ff;
+}
+
+.math-symbol-scroll-container::-webkit-scrollbar-thumb:hover {
+    background-color: #818cf8;
+}
+
+/* Sembol satırı - yanyana dizilim */
+.math-symbol-row {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    min-width: max-content;
+}
+
+.math-symbol-btn {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border: 1px solid #e2e8f0;
+    color: #374151;
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.math-symbol-btn:hover {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    border-color: #3b82f6;
+    color: #1e40af;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    transform: translateY(-1px);
+}
+
+.math-symbol-btn:active {
+    background: linear-gradient(135deg, #bfdbfe 0%, #93c5fd 100%);
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.1);
+}
+
+.math-symbol-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+/* Mobil için optimize edilmiş boyutlar */
+@media (max-width: 640px) {
+    .math-symbol-btn {
+        min-width: 2.25rem;
+        min-height: 2.25rem;
+        font-size: 0.8rem;
+        padding: 0.375rem 0.5rem;
+    }
+    
+    .math-symbol-scroll-container {
+        padding: 0.25rem 0;
+    }
+    
+    .math-symbol-row {
+        gap: 0.375rem;
+        padding: 0.125rem 0.375rem;
+    }
+}
+
+/* Tablet için optimize edilmiş boyutlar */
+@media (max-width: 768px) {
+    .math-symbol-btn {
+        min-width: 2.5rem;
+        min-height: 2.5rem;
+        font-size: 0.85rem;
+        padding: 0.5rem 0.625rem;
+    }
+}
+
+/* =================================================================== */
+/* === MOBİL OPTİMİZASYONU (Güçlendirildi)                         === */
+/* =================================================================== */
+
+@media (max-width: 768px) {
+    /* Genel mobil optimizasyonu */
+    .container {
+        padding: 0.75rem !important;
+    }
+    
+    /* Header mobil optimizasyonu */
+    .header-content h1 {
+        font-size: 1.5rem !important;
+    }
+    
+    .header-content p {
+        font-size: 0.9rem !important;
+    }
+    
+    /* Form mobil optimizasyonu */
+    .form-group label {
+        font-size: 0.9rem !important;
+    }
+    
+    .form-group input,
+    .form-group textarea {
+        font-size: 0.9rem !important;
+        padding: 0.75rem !important;
+    }
+    
+    /* Buton mobil optimizasyonu */
+    .btn {
+        font-size: 0.9rem !important;
+        padding: 0.75rem 1rem !important;
+    }
+    
+    /* Sonuç mobil optimizasyonu */
+    .result-container {
+        padding: 1rem !important;
+    }
+    
+    .result-container h2 {
+        font-size: 1.25rem !important;
+    }
+    
+    .result-container p {
+        font-size: 0.9rem !important;
+    }
+    
+    /* Matematik render mobil optimizasyonu - GÜÇLENDİRİLDİ */
+    .math-rendered,
+    .mjx-container,
+    .mjx-chtml {
+        font-size: 1em !important; /* Minimum boyut artırıldı */
+    }
+    
+    /* Akıllı rehber mobil optimizasyonu - GÜÇLENDİRİLDİ */
+    .smart-guide-workspace .smart-content,
+    .roadmap-content .smart-content {
+        font-size: 0.9rem !important; /* Minimum boyut artırıldı */
+    }
+    
+    .roadmap-step-item {
+        font-size: 0.85rem !important; /* Minimum boyut artırıldı */
+    }
+    
+    .roadmap-step-item .step-title {
+        font-size: 0.95rem !important; /* Minimum boyut artırıldı */
+    }
+    
+    .roadmap-step-item .step-description {
+        font-size: 0.8rem !important; /* Minimum boyut artırıldı */
+    }
+}
+
+
+/* =================================================================================
+   ✅ UZUN MATEMATİKSEL İFADELER İÇİN OPTİMİZASYON - YENİ EKLENDİ
+   =================================================================================
+   Bu kurallar, uzun matematiksel ifadelerin daha iyi görünmesini sağlar
+   ve gereksiz scrollbar'ları önler.
+*/
+
+/* Uzun matematiksel ifadeler için özel stiller */
+.math-rendered .mjx-chtml,
+.rendered-pure_latex .mjx-chtml,
+.rendered-inline_math .mjx-chtml {
+    font-size: 1.1em !important; /* Uzun ifadeler için boyut artırıldı */
+    line-height: 1.4 !important;
+    max-width: 100% !important;
+}
+
+/* Uzun ifadelerde scrollbar'ları sadece gerektiğinde göster */
+.math-rendered .mjx-chtml[style*="overflow"],
+.rendered-pure_latex .mjx-chtml[style*="overflow"],
+.rendered-inline_math .mjx-chtml[style*="overflow"] {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+}
+
+/* Uzun ifadelerde scrollbar'ları gizle (sadece içerik taştığında göster) */
+.math-rendered .mjx-chtml:not([style*="overflow"]),
+.rendered-pure_latex .mjx-chtml:not([style*="overflow"]),
+.rendered-inline_math .mjx-chtml:not([style*="overflow"]) {
+    overflow: visible !important;
+}
+
+/* MathJax SVG'lerde gereksiz scrollbar'ları önle */
+.math-rendered svg,
+.rendered-pure_latex svg,
+.rendered-inline_math svg {
+    max-width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+}
+
+/* Uzun matematiksel ifadeler için container optimizasyonu */
+.math-container-long {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.5rem 0;
+    /* Sadece gerektiğinde scrollbar göster */
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+/* Uzun ifadelerde scrollbar stilleri */
+.math-container-long::-webkit-scrollbar {
+    height: 4px; /* Daha ince scrollbar */
+}
+
+.math-container-long::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 2px;
+}
+
+.math-container-long::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 2px;
+}
+
+.math-container-long::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8;
+}
+
+/* =================================================================================
+   ✅ GEREKSİZ SCROLLBAR'LARI ÖNLEME SİSTEMİ - YENİ EKLENDİ
+   =================================================================================
+   Bu kurallar, basit içeriklerde gereksiz scrollbar'ların görünmesini önler.
+*/
+
+/* Basit içeriklerde scrollbar'ları gizle */
+.math-rendered:not(.has-overflow),
+.rendered-pure_latex:not(.has-overflow),
+.rendered-inline_math:not(.has-overflow) {
+    overflow: visible !important;
+}
+
+/* Sadece gerçekten taşan içeriklerde scrollbar göster */
+.math-rendered.has-overflow,
+.rendered-pure_latex.has-overflow,
+.rendered-inline_math.has-overflow {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+}
+
+/* MathJax elementlerinde gereksiz scrollbar'ları önle */
+.mjx-container:not(.has-overflow),
+.mjx-chtml:not(.has-overflow) {
+    overflow: visible !important;
+}
+
+/* Sadece gerçekten taşan MathJax elementlerinde scrollbar göster */
+.mjx-container.has-overflow,
+.mjx-chtml.has-overflow {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
 }
 

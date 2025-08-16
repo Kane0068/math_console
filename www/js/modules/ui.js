@@ -65,22 +65,79 @@ export function showError(message, showResetButton = false, onReset = () => {}) 
     statusMessage.classList.remove('hidden');
     statusMessage.className = '';
 
-    let errorHTML = `
-        <div class="flex flex-col items-center justify-center space-y-3 p-4 bg-red-100 text-red-700 rounded-lg">
-            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-            </svg>
-            <p class="font-medium text-center">${message}</p>
-        </div>
-    `;
+    // Sistem sıfırlama mesajları için özel stil
+    const isSystemResetMessage = message.includes('yoğun') || 
+                                message.includes('meşgul') || 
+                                message.includes('gecikme') || 
+                                message.includes('sistem') ||
+                                message.includes('yapay zeka');
+
+    // Mesajı satırlara böl ve her satırı ayrı paragraf yap
+    const messageLines = message.split('\n').filter(line => line.trim() !== '');
+    let messageHTML = '';
+    
+    messageLines.forEach((line, index) => {
+        if (line.trim() === '') return;
+        
+        if (line.startsWith('💡')) {
+            // Öneri satırları için özel stil
+            messageHTML += `<p class="text-sm text-blue-600 font-medium mt-2">${line}</p>`;
+        } else if (line.startsWith('•')) {
+            // Madde işaretli satırlar için özel stil
+            messageHTML += `<p class="text-sm text-gray-600 ml-4">${line}</p>`;
+        } else if (line.includes('⚠️')) {
+            // Uyarı satırları için özel stil
+            messageHTML += `<p class="text-lg font-bold text-orange-600">${line}</p>`;
+        } else if (line.startsWith('"') && line.endsWith('"')) {
+            // Tırnak içindeki metin için özel stil
+            messageHTML += `<p class="text-sm text-gray-500 italic bg-gray-50 p-2 rounded">${line}</p>`;
+        } else {
+            // Normal satırlar için standart stil
+            messageHTML += `<p class="font-medium text-center">${line}</p>`;
+        }
+    });
+
+    // Sistem sıfırlama mesajları için farklı renk ve ikon kullan
+    let errorHTML;
+    if (isSystemResetMessage) {
+        errorHTML = `
+            <div class="flex flex-col items-center justify-center space-y-3 p-4 bg-blue-100 text-blue-700 rounded-lg max-w-md">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <div class="text-center space-y-2">
+                    ${messageHTML}
+                </div>
+            </div>
+        `;
+    } else {
+        errorHTML = `
+            <div class="flex flex-col items-center justify-center space-y-3 p-4 bg-red-100 text-red-700 rounded-lg max-w-md">
+                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>
+                <div class="text-center space-y-2">
+                    ${messageHTML}
+                </div>
+            </div>
+        `;
+    }
+
     statusMessage.innerHTML = errorHTML;
 
     if (showResetButton) {
         const buttonContainer = document.createElement('div');
         buttonContainer.className = 'mt-4 text-center';
         const okButton = document.createElement('button');
-        okButton.textContent = 'Tamam';
-        okButton.className = 'btn btn-primary px-6 py-2';
+        
+        // Sistem sıfırlama mesajları için farklı buton metni
+        if (isSystemResetMessage) {
+            okButton.textContent = 'Anladım';
+            okButton.className = 'btn btn-primary px-6 py-2 bg-blue-600 hover:bg-blue-700';
+        } else {
+            okButton.textContent = 'Tamam';
+            okButton.className = 'btn btn-primary px-6 py-2';
+        }
 
         okButton.onclick = function() {
             statusMessage.innerHTML = '';
@@ -419,12 +476,18 @@ function setupRenderMonitoring() {
 }
 
 /**
- * Gelişmiş temporary message - Multiple messages support
+ * API yanıt süresine göre çalışan akıllı loading animasyonu
+ * @param {string|string[]} messages - Gösterilecek mesajlar
+ * @param {string} icon - Mesaj ikonu
+ * @param {number} minDuration - Minimum gösterim süresi (ms)
+ * @param {boolean} autoResolve - true: otomatik kapanır, false: API yanıtı bekler
+ * @returns {Promise} - API yanıtı geldiğinde veya süre dolduğunda resolve olur
  */
-export function showTemporaryMessage(messages, icon = '🚀', duration = 2000) {
+export function showTemporaryMessage(messages, icon = '🚀', minDuration = 2000, autoResolve = false) {
     return new Promise(resolve => {
         const messageArray = Array.isArray(messages) ? messages : [messages];
         let currentIndex = 0;
+        let isResolved = false;
         
         // Önceki mesajı temizle
         const existingMessage = document.getElementById('temporary-message-overlay');
@@ -443,6 +506,10 @@ export function showTemporaryMessage(messages, icon = '🚀', duration = 2000) {
                 <div class="w-full bg-gray-200 rounded-full h-2">
                     <div id="progress-bar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
                 </div>
+                <div class="flex items-center space-x-2 text-sm text-gray-500">
+                    <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                    <span>${autoResolve ? 'İşlem devam ediyor...' : 'API yanıtı bekleniyor...'}</span>
+                </div>
             </div>
         `;
         document.body.appendChild(overlay);
@@ -451,16 +518,18 @@ export function showTemporaryMessage(messages, icon = '🚀', duration = 2000) {
         const progressBar = document.getElementById('progress-bar');
 
         const updateMessage = () => {
-            if (!pElement) return;
+            if (!pElement || isResolved) return;
             
             pElement.style.opacity = '0';
             setTimeout(() => {
-                pElement.textContent = messageArray[currentIndex];
-                pElement.style.opacity = '1';
-                
-                // Progress bar güncelle
-                const progress = ((currentIndex + 1) / messageArray.length) * 100;
-                progressBar.style.width = `${progress}%`;
+                if (!isResolved) {
+                    pElement.textContent = messageArray[currentIndex];
+                    pElement.style.opacity = '1';
+                    
+                    // Progress bar güncelle
+                    const progress = ((currentIndex + 1) / messageArray.length) * 100;
+                    progressBar.style.width = `${progress}%`;
+                }
             }, 200);
         };
 
@@ -471,37 +540,89 @@ export function showTemporaryMessage(messages, icon = '🚀', duration = 2000) {
         let messageInterval;
         if (messageArray.length > 1) {
             messageInterval = setInterval(() => {
-                currentIndex = (currentIndex + 1) % messageArray.length;
-                updateMessage();
-            }, duration);
+                if (!isResolved) {
+                    currentIndex = (currentIndex + 1) % messageArray.length;
+                    updateMessage();
+                }
+            }, 1500); // Mesaj değişim süresini kısalt
         }
 
-        const totalDuration = (messageArray.length > 1) 
-            ? duration * messageArray.length + 1000
-            : duration;
-
+        // Minimum süre kontrolü
+        let minDurationElapsed = false;
         setTimeout(() => {
-            if (messageInterval) clearInterval(messageInterval);
-            
-            overlay.classList.remove('animate-fade-in');
-            overlay.classList.add('animate-fade-out');
-            
-            setTimeout(() => {
-                if (overlay.parentNode) {
-                    overlay.remove();
-                }
-                resolve();
-            }, 300);
-        }, totalDuration);
+            minDurationElapsed = true;
+            checkIfReadyToResolve();
+        }, minDuration);
+
+        // API yanıtı geldiğinde çağrılacak fonksiyon
+        const markAsReady = () => {
+            if (!isResolved) {
+                isResolved = true;
+                checkIfReadyToResolve();
+            }
+        };
+
+        // Hem minimum süre hem de API yanıtı geldiğinde resolve et
+        const checkIfReadyToResolve = () => {
+            if (minDurationElapsed && (isResolved || autoResolve)) {
+                if (messageInterval) clearInterval(messageInterval);
+                
+                // Başarı animasyonu göster
+                overlay.querySelector('.text-6xl').textContent = '✅';
+                overlay.querySelector('.text-sm').innerHTML = '<span class="text-green-600">✓ Tamamlandı!</span>';
+                
+                setTimeout(() => {
+                    overlay.classList.remove('animate-fade-in');
+                    overlay.classList.add('animate-fade-out');
+                    
+                    setTimeout(() => {
+                        if (overlay.parentNode) {
+                            overlay.remove();
+                        }
+                        resolve();
+                    }, 300);
+                }, 500);
+            }
+        };
+
+        // Dışarıdan erişilebilir resolve fonksiyonu
+        overlay.markAsReady = markAsReady;
+        
+        // Global olarak erişilebilir yap
+        window.currentLoadingOverlay = overlay;
     });
 }
 
 /**
- * HTML escape utility
+ * HTML escape utility - Türkçe karakter desteği ile
  */
 export function escapeHtml(text) {
+    if (!text) return '';
+    
     const div = document.createElement('div');
     div.textContent = text;
+    return div.innerHTML;
+}
+
+/**
+ * Türkçe karakterleri koruyan HTML escape
+ */
+export function escapeHtmlTurkish(text) {
+    if (!text) return '';
+    
+    // Türkçe karakterleri koru
+    const turkishChars = {
+        'ğ': 'ğ', 'ü': 'ü', 'ş': 'ş', 'ı': 'ı', 'ö': 'ö', 'ç': 'ç',
+        'Ğ': 'Ğ', 'Ü': 'Ü', 'Ş': 'Ş', 'İ': 'İ', 'Ö': 'Ö', 'Ç': 'Ç'
+    };
+    
+    let escaped = text;
+    for (const [char, replacement] of Object.entries(turkishChars)) {
+        escaped = escaped.replace(new RegExp(char, 'g'), replacement);
+    }
+    
+    const div = document.createElement('div');
+    div.textContent = escaped;
     return div.innerHTML;
 }
 

@@ -69,6 +69,13 @@ export class AdvancedErrorHandler {
     }
     
     showUserError(errorType, errorInfo) {
+        // Sistem sıfırlama durumlarında kullanıcı dostu mesajlar
+        const systemResetMessages = [
+            "Sistem şu anda yoğun. Lütfen birkaç dakika sonra tekrar deneyin.",
+            "Yapay zeka şu anda meşgul. Lütfen biraz bekleyip tekrar deneyin.",
+            "Geçici bir sistem gecikmesi yaşanıyor. Lütfen tekrar deneyin.",
+            "Sistemlerimiz şu anda yoğun. Lütfen daha sonra tekrar deneyin."
+        ];
 
         const invalidResponseMessages = [
             "Sorunuz tam olarak anlaşılamadı. Lütfen problemi daha net bir şekilde yazarak veya farklı bir fotoğraf çekerek tekrar deneyin.",
@@ -76,15 +83,56 @@ export class AdvancedErrorHandler {
             "Yapay zeka bir çözüm üretirken zorlandı. Bu genellikle sorunun belirsiz olmasından veya desteklenmeyen bir konudan kaynaklanır. Tekrar dener misiniz?",
             "Üzgünüm, şu anda bu soruya bir yanıt oluşturamıyorum. Lütfen daha sonra tekrar deneyin."
         ];
+
+        // API'den gelen özel hata mesajları - Kullanıcı dostu ve imaj koruyucu
+        const apiSpecificMessages = {
+            'resource-exhausted': 'Şu anda sistemlerimiz yoğun. Lütfen birkaç dakika sonra tekrar deneyin.',
+            'deadline-exceeded': 'İstek zaman aşımına uğradı. Lütfen tekrar deneyin.',
+            'invalid-argument': 'Gönderilen veri formatı uygun değil. Lütfen soruyu kontrol edin.',
+            'not-found': 'İstenen kaynak bulunamadı. Lütfen tekrar deneyin.',
+            'permission-denied': 'Bu işlem için yetkiniz bulunmuyor.',
+            'already-exists': 'Bu işlem zaten yapılmış.',
+            'failed-precondition': 'İşlem ön koşulları sağlanamadı.',
+            'aborted': 'İşlem iptal edildi.',
+            'out-of-range': 'İstek sınırlar dışında.',
+            'unimplemented': 'Bu özellik henüz desteklenmiyor.',
+            'internal': 'Sunucu iç hatası. Lütfen daha sonra tekrar deneyin.',
+            'unavailable': 'Servis şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.',
+            'data-loss': 'Veri kaybı oluştu. Lütfen tekrar deneyin.',
+            'unauthenticated': 'Giriş yapmanız gerekiyor.'
+        };
+
+        // Ana hata mesajları - Kullanıcı dostu ve imaj koruyucu
         const messages = {
-            RATE_LIMIT_EXCEEDED: 'Günlük kullanım limitinize ulaştınız veya çok sık istek gönderiyorsunuz. Lütfen daha sonra tekrar deneyin.',
-            NETWORK_ERROR: 'İnternet bağlantınız yok gibi görünüyor. Lütfen bağlantınızı kontrol edin.',
+            RATE_LIMIT_EXCEEDED: 'Günlük kullanım limitinize ulaştınız. Lütfen daha sonra tekrar deneyin.',
+            NETWORK_ERROR: 'İnternet bağlantınızı kontrol edin. Lütfen bağlantınızı yeniden kurup tekrar deneyin.',
             SERVER_ERROR: 'Sunucularımızda geçici bir sorun var. Ekibimiz ilgileniyor, lütfen biraz sonra tekrar deneyin.',
-            TIMEOUT_ERROR: 'İstek çok uzun sürdü ve zaman aşımına uğradı. İnternet bağlantınızı kontrol edip tekrar deneyin.',
+            TIMEOUT_ERROR: 'İstek çok uzun sürdü. İnternet bağlantınızı kontrol edip tekrar deneyin.',
             PARSE_ERROR: 'Sunucudan beklenmedik bir yanıt alındı. Lütfen tekrar deneyin.',
             AUTHENTICATION_ERROR: 'Yetkilendirme hatası. Lütfen yeniden giriş yapmayı deneyin.',
-            UNKNOWN_ERROR: 'Beklenmeyen bir hata oluştu. Sorun devam ederse lütfen bize bildirin.'
+            UNKNOWN_ERROR: 'Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.',
+            INVALID_RESPONSE_ERROR: 'Yapay zeka yanıtı anlaşılamadı. Lütfen soruyu daha net bir şekilde tekrar deneyin.',
+            API_ERROR: 'API ile iletişim kurulamadı. Lütfen internet bağlantınızı kontrol edin.',
+            RENDER_ERROR: 'Çözüm görüntülenirken bir sorun oluştu. Lütfen tekrar deneyin.',
+            CONTENT_ERROR: 'İçerik işlenirken bir hata oluştu. Lütfen soruyu kontrol edin.',
+            SYSTEM_BUSY: 'Sistemlerimiz şu anda yoğun. Lütfen birkaç dakika sonra tekrar deneyin.',
+            INSUFFICIENT_DATA: 'Soruyu çözmek için yeterli bilgi yok. Lütfen daha detaylı bir soru sorun.',
+            UNSUPPORTED_FORMAT: 'Bu format desteklenmiyor. Lütfen metin olarak yazın veya fotoğraf çekin.',
+            IMAGE_QUALITY: 'Fotoğraf kalitesi yetersiz. Lütfen daha net bir fotoğraf çekin.',
+            HANDWRITING_RECOGNITION: 'El yazısı tanınamadı. Lütfen daha okunaklı yazın veya klavye kullanın.',
+            SYSTEM_RESET: systemResetMessages[Math.floor(Math.random() * systemResetMessages.length)]
         };
+
+        // API'den gelen özel hata kodlarını kontrol et
+        if (errorInfo && errorInfo.context && errorInfo.context.apiErrorCode) {
+            const apiMessage = apiSpecificMessages[errorInfo.context.apiErrorCode];
+            if (apiMessage) {
+                const message = apiMessage;
+                this.showDetailedError(message, errorType, errorInfo);
+                return;
+            }
+        }
+
         const message = messages[errorType] || messages['UNKNOWN_ERROR'];
         
         // Global showError fonksiyonunu çağır
@@ -101,6 +149,78 @@ export class AdvancedErrorHandler {
             window.dispatchEvent(new CustomEvent('show-error-message', {
                 detail: { message: message, isCritical: true }
             }));
+        }
+    }
+
+    /**
+     * Detaylı hata mesajı gösterir ve kullanıcıya yardımcı olur
+     */
+    showDetailedError(message, errorType, errorInfo) {
+        // Global showError fonksiyonunu çağır
+        if (typeof window.showError === 'function') {
+            let detailedMessage = message;
+            
+            // Hata tipine göre ek öneriler ekle - Kullanıcı dostu ve imaj koruyucu
+            switch (errorType) {
+                case 'API_ERROR':
+                    detailedMessage += '\n\n💡 Öneriler:\n• İnternet bağlantınızı kontrol edin\n• Sayfayı yenileyin\n• Daha sonra tekrar deneyin';
+                    break;
+                case 'RENDER_ERROR':
+                    detailedMessage += '\n\n💡 Öneriler:\n• Sayfayı yenileyin\n• Farklı bir tarayıcı kullanın\n• Soruyu tekrar gönderin';
+                    break;
+                case 'IMAGE_QUALITY':
+                    detailedMessage += '\n\n💡 Öneriler:\n• Daha net bir fotoğraf çekin\n• İyi aydınlatma kullanın\n• Metin olarak yazmayı deneyin';
+                    break;
+                case 'HANDWRITING_RECOGNITION':
+                    detailedMessage += '\n\n💡 Öneriler:\n• Daha okunaklı yazın\n• Klavye kullanın\n• Fotoğraf çekin';
+                    break;
+                case 'SYSTEM_BUSY':
+                    detailedMessage += '\n\n💡 Öneriler:\n• Birkaç dakika bekleyin\n• Daha sonra tekrar deneyin\n• Sorunuzu kaydedin';
+                    break;
+                case 'INSUFFICIENT_DATA':
+                    detailedMessage += '\n\n💡 Öneriler:\n• Daha detaylı soru sorun\n• Tüm verileri belirtin\n• Örnek ekleyin';
+                    break;
+                case 'SYSTEM_RESET':
+                    detailedMessage += '\n\n💡 Öneriler:\n• Birkaç dakika bekleyin\n• Soruyu tekrar gönderin\n• Daha sonra tekrar deneyin';
+                    break;
+                default:
+                    detailedMessage += '\n\n💡 Öneriler:\n• Sayfayı yenileyin\n• Daha sonra tekrar deneyin\n• Sorun devam ederse bize bildirin';
+            }
+            
+            window.showError(detailedMessage, true, () => {
+                if(window.stateManager) {
+                    window.stateManager.reset();
+                }
+            });
+        } else {
+            // Fallback
+            window.dispatchEvent(new CustomEvent('show-error-message', {
+                detail: { message: message, isCritical: true, errorType: errorType }
+            }));
+        }
+    }
+
+    /**
+     * Sistem sıfırlama durumunda özel mesaj gösterir
+     */
+    showSystemResetMessage(context = 'general') {
+        const resetMessages = {
+            'general': 'Sistem şu anda yoğun. Lütfen birkaç dakika sonra tekrar deneyin.',
+            'api_timeout': 'Yapay zeka şu anda meşgul. Lütfen biraz bekleyip tekrar deneyin.',
+            'server_busy': 'Sunucularımız şu anda yoğun. Lütfen daha sonra tekrar deneyin.',
+            'processing_error': 'İşlem sırasında bir gecikme yaşandı. Lütfen tekrar deneyin.',
+            'ai_overload': 'Yapay zeka sistemleri şu anda yoğun. Lütfen birkaç dakika sonra tekrar deneyin.',
+            'temporary_issue': 'Geçici bir sistem gecikmesi yaşanıyor. Lütfen tekrar deneyin.'
+        };
+
+        const message = resetMessages[context] || resetMessages['general'];
+        
+        if (typeof window.showError === 'function') {
+            window.showError(message, true, () => {
+                if(window.stateManager) {
+                    window.stateManager.reset();
+                }
+            });
         }
     }
 

@@ -22,6 +22,24 @@
         </header>
 
         <div class="bg-white rounded-2xl shadow-xl p-8 space-y-6">
+            <!-- Profil Fotoğrafı -->
+            <div class="text-center mb-6">
+                <div class="relative inline-block">
+                    <div id="profile-photo-container" class="w-24 h-24 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-2xl font-bold cursor-pointer overflow-hidden">
+                        <img id="profile-photo" class="w-full h-full object-cover hidden" alt="Profil Fotoğrafı">
+                        <span id="profile-initials">K</span>
+                    </div>
+                    <button id="change-photo-btn" class="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-lg hover:shadow-xl transition-shadow">
+                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                    </button>
+                </div>
+                <input type="file" id="photo-input" accept="image/*" class="hidden">
+                <p class="text-sm text-gray-500 mt-2">Fotoğrafınızı değiştirmek için tıklayın</p>
+            </div>
+
             <!-- Bilgi Alanı -->
             <div>
                 <h2 class="text-xl font-bold text-gray-700 mb-4">Hesap Bilgileri</h2>
@@ -58,11 +76,25 @@
                 </div>
             </div>
 
+            <!-- YENİ: Premium Durum Kartı -->
+            <div id="premium-status-container" class="pt-6 border-t">
+                <!-- Premium durum bilgileri buraya dinamik olarak yüklenecek -->
+            </div>
+
+            <!-- YENİ: Plan Detayları -->
+            <div id="plan-details-container" class="pt-4">
+                <!-- Plan özellikleri buraya dinamik olarak yüklenecek -->
+            </div>
+
+            <!-- YENİ: Jeton Durumu -->
+            <div id="token-status-container" class="pt-4">
+                <!-- Jeton durumu buraya dinamik olarak yüklenecek -->
+            </div>
+
             <!-- Premium Yükseltme Alanı -->
             <div id="upgrade-section" class="hidden pt-6 border-t">
                 <h2 class="text-xl font-bold text-gray-700 mb-2">Daha Fazlasını Keşfet</h2>
-                <p class="text-gray-600 mb-4">Premium'a geçerek günlük 20 soru hakkı ve daha fazla özelliğe sahip olun!
-                </p>
+                <p class="text-gray-600 mb-4">Premium'a geçerek daha fazla jeton ve özelliğe sahip olun!</p>
                 <a href="premium.html"
                     class="w-full text-center block bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-transform transform hover:scale-105">
                     Premium'a Geç

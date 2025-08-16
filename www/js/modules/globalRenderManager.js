@@ -1,5 +1,5 @@
 // www/js/modules/globalRenderManager.js
-// FINAL VERSION - Prompt-Optimized + SVG Fix + Full Integration
+// FINAL VERSION - Prompt-Optimized + SVG Fix + Full Integration + TURKISH SUPPORT
 
 export class GlobalRenderManager {
     constructor() {
@@ -29,7 +29,8 @@ export class GlobalRenderManager {
             metadataMisses: 0,
             avgRenderTime: 0,
             totalRenderTime: 0,
-            svgErrors: 0
+            svgErrors: 0,
+            turkishCharFixes: 0
         };
     }
 
@@ -202,7 +203,7 @@ export class GlobalRenderManager {
         // LaTeX komutları var mı?
         const hasLatexCommands = /(\\[a-zA-Z]+|\^|_|\{|\})/.test(normalizedContent);
         
-        // Text karakterleri var mı?
+        // Text karakterleri var mı? (Türkçe karakterler dahil)
         const hasText = /[a-zA-ZğüşıöçĞÜŞİÖÇ]/.test(normalizedContent);
 
         // Karar ağacı (optimize edilmiş)
@@ -290,10 +291,31 @@ export class GlobalRenderManager {
 
             if (result) {
                 this.stats.successful++;
-                element.classList.add(`rendered-${renderInfo.strategy}`);
+                
+                // Render stratejisine göre doğru class ekle
+                switch (renderInfo.strategy) {
+                    case 'text':
+                        element.classList.add('rendered-text');
+                        break;
+                    case 'pure_latex':
+                        element.classList.add('rendered-pure_latex');
+                        break;
+                    case 'inline_math':
+                        element.classList.add('rendered-inline_math');
+                        break;
+                    case 'mixed_content':
+                        element.classList.add('rendered-mixed_content');
+                        break;
+                    default:
+                        element.classList.add(`rendered-${renderInfo.strategy}`);
+                }
+                
                 if (renderInfo.priority) {
                     element.classList.add('priority-rendered');
                 }
+                
+                // YENİ: Overflow kontrolü ve CSS class ekleme
+                this.checkAndMarkOverflow(element);
             }
 
             return result;
@@ -309,11 +331,42 @@ export class GlobalRenderManager {
         }
     }
 
-    // YENİ: Text-only render (optimize edilmiş)
+    // YENİ: Text-only render (Türkçe karakter desteği ile) - GÜÇLENDİRİLDİ
     renderText(element, content) {
-        element.textContent = content;
-        element.classList.add('text-rendered');
+        // Türkçe karakterleri koru ve güvenli şekilde render et
+        const safeContent = this.sanitizeTurkishContent(content);
+        element.textContent = safeContent;
+        element.classList.add('rendered-text'); // CSS'de tanımlı class kullan
+        
+        if (safeContent !== content) {
+            this.stats.turkishCharFixes++;
+            console.log('🔤 Türkçe karakter düzeltmesi yapıldı');
+        }
+        
+        // YENİ: Overflow kontrolü ve CSS class ekleme
+        this.checkAndMarkOverflow(element);
+        
         return true;
+    }
+
+    // YENİ: Türkçe karakter sanitizasyonu
+    sanitizeTurkishContent(content) {
+        if (!content) return '';
+        
+        // Türkçe karakterleri koru ve güvenli hale getir
+        return content
+            .replace(/ğ/g, 'ğ')
+            .replace(/ü/g, 'ü')
+            .replace(/ş/g, 'ş')
+            .replace(/ı/g, 'ı')
+            .replace(/ö/g, 'ö')
+            .replace(/ç/g, 'ç')
+            .replace(/Ğ/g, 'Ğ')
+            .replace(/Ü/g, 'Ü')
+            .replace(/Ş/g, 'Ş')
+            .replace(/İ/g, 'İ')
+            .replace(/Ö/g, 'Ö')
+            .replace(/Ç/g, 'Ç');
     }
 
     // YENİ: Inline math render ($ işaretli matematik)
@@ -325,7 +378,11 @@ export class GlobalRenderManager {
             element.innerHTML = processedContent;
             await MathJax.typesetPromise([element]);
             
-            element.classList.add('inline-math-rendered');
+            element.classList.add('rendered-inline_math');
+            
+            // YENİ: Overflow kontrolü ve CSS class ekleme
+            this.checkAndMarkOverflow(element);
+            
             return true;
 
         } catch (error) {
@@ -336,10 +393,7 @@ export class GlobalRenderManager {
         }
     }
 
-    // ✅ SVG FIX: Geliştirilmiş pure LaTeX render
-    // www/js/modules/globalRenderManager.js -> Bu fonksiyonu mevcut olanla değiştirin.
-
-    // ✅ SVG FIX: Geliştirilmiş pure LaTeX render
+    // ✅ SVG FIX: Geliştirilmiş pure LaTeX render (Türkçe karakter desteği ile)
     async renderPureLatex(element, content, displayMode = false) {
         // Geçici render div'ini oluştur
         const tempDiv = document.createElement('div');
@@ -358,6 +412,9 @@ export class GlobalRenderManager {
                 cleanContent = cleanContent.substring(1, cleanContent.length - 1).trim();
             }
             
+            // Türkçe karakterleri koru
+            cleanContent = this.sanitizeTurkishContent(cleanContent);
+            
             const mathContent = displayMode ? `\\[${cleanContent}\\]` : `\\(${cleanContent}\\)`;
             tempDiv.innerHTML = mathContent;
             
@@ -367,38 +424,72 @@ export class GlobalRenderManager {
             // Render işlemini dene
             await MathJax.typesetPromise([tempDiv]);
             
-            // SVG doğrulama kontrolü
+            // SVG doğrulama kontrolü (güçlendirildi)
             const svgElements = tempDiv.querySelectorAll('svg');
             let hasValidSVG = true;
+            let svgErrorCount = 0;
             
             svgElements.forEach(svg => {
                 const viewBox = svg.getAttribute('viewBox');
-                if (viewBox && (viewBox.includes('NaN') || viewBox.includes('undefined'))) {
+                const width = svg.getAttribute('width');
+                const height = svg.getAttribute('height');
+                
+                // Daha kapsamlı SVG hata kontrolü
+                if (viewBox && (viewBox.includes('NaN') || viewBox.includes('undefined') || viewBox.includes('Infinity'))) {
                     console.warn('⚠️ Invalid SVG viewBox detected:', viewBox, 'Content:', cleanContent);
                     hasValidSVG = false;
-                    this.stats.svgErrors++;
+                    svgErrorCount++;
+                }
+                
+                if (width && (width.includes('NaN') || width.includes('undefined') || width.includes('Infinity'))) {
+                    console.warn('⚠️ Invalid SVG width detected:', width);
+                    hasValidSVG = false;
+                    svgErrorCount++;
+                }
+                
+                if (height && (height.includes('NaN') || height.includes('undefined') || height.includes('Infinity'))) {
+                    console.warn('⚠️ Invalid SVG height detected:', height);
+                    hasValidSVG = false;
+                    svgErrorCount++;
                 }
             });
+            
+            // SVG hata sayısını güncelle
+            this.stats.svgErrors += svgErrorCount;
             
             if (hasValidSVG && tempDiv.innerHTML.trim()) {
                 element.innerHTML = tempDiv.innerHTML;
                 element.classList.add('math-rendered', 'mathjax-rendered');
                 
+                // Render stratejisine göre doğru class ekle
                 if (displayMode) {
+                    element.classList.add('rendered-pure_latex');
                     element.style.display = 'block';
                     element.style.textAlign = 'center';
                     element.style.margin = '1rem auto';
+                } else {
+                    element.classList.add('rendered-inline_math');
                 }
+                
                 return true;
             } else {
-                throw new Error('Invalid SVG generated by MathJax or empty render');
+                throw new Error(`Invalid SVG generated by MathJax or empty render. SVG errors: ${svgErrorCount}`);
             }
             
         } catch (error) {
             console.error('Pure LaTeX render hatası:', error);
-            element.textContent = content; // Fallback olarak ham metni göster
-            element.classList.add('render-error');
-            element.title = `Render hatası: ${error.message}`;
+            
+            // SVG hatası durumunda fallback olarak text render dene
+            if (error.message.includes('SVG')) {
+                console.warn('🔄 SVG render hatası, text fallback deneniyor...');
+                element.textContent = content;
+                element.classList.add('render-error', 'svg-fallback');
+                element.title = `SVG render hatası, text olarak gösteriliyor: ${error.message}`;
+            } else {
+                element.textContent = content;
+                element.classList.add('render-error');
+                element.title = `Render hatası: ${error.message}`;
+            }
             return false;
         } finally {
             // GARANTİLİ TEMİZLİK: Başarılı da olsa, hata da olsa tempDiv'i DOM'dan kaldır.
@@ -412,23 +503,23 @@ export class GlobalRenderManager {
         try {
             const parts = this.splitMixedContent(content);
             
-            // --- PARADOKS AVCISI MEKANİZMASI ---
-            // Eğer splitMixedContent fonksiyonu içeriği bölemediyse (sadece tek bir metin parçası döndürdüyse)
-            // ama bu metin parçası içinde LaTeX komutları varsa, o zaman tüm içeriği tek bir matematik ifadesi olarak render et.
-            if (parts.length === 1 && parts[0].type === 'text') {
-                const textPart = parts[0].content;
+                // --- PARADOKS AVCISI MEKANİZMASI - GÜÇLENDİRİLDİ ---
+    // Eğer splitMixedContent fonksiyonu içeriği bölemediyse (sadece tek bir metin parçası döndürdüyse)
+    // ama bu metin parçası içinde LaTeX komutları varsa, o zaman tüm içeriği tek bir matematik ifadesi olarak render et.
+    if (parts.length === 1 && parts[0].type === 'text') {
+        const textPart = parts[0].content;
 
-                // KONTROL GÜÇLENDİRİLDİ: Sadece '\' değil, '^', '_', '{', '}' gibi
-                // tüm temel LaTeX komutlarını arayan daha kapsamlı bir regex kullanıyoruz.
-                const hasLatexCommands = /(\\[a-zA-Z]+|\^|_|\{|\})/.test(textPart);
+        // KONTROL GÜÇLENDİRİLDİ: Sadece '\' değil, '^', '_', '{', '}' gibi
+        // tüm temel LaTeX komutlarını arayan daha kapsamlı bir regex kullanıyoruz.
+        const hasLatexCommands = /(\\[a-zA-Z]+|\^|_|\{|\})/.test(textPart);
 
-                if (hasLatexCommands) {
-                    console.warn(`⚠️ MIXED CONTENT PARADOX DETECTED: Sınırlayıcı ($) yok ama LaTeX komutu var. İçerik 'pure_latex' olarak render edilecek. İçerik: "${textPart}"`);
-                    // Bütün elementi, içeriği saf LaTeX olarak kabul ederek render et ve işlemi bitir.
-                    return await this.renderPureLatex(element, textPart, false);
-                }
-            }
-            // --- PARADOKS AVCISI SONU ---
+        if (hasLatexCommands) {
+            console.log(`🔄 MIXED CONTENT PARADOX DETECTED: LaTeX komutları tespit edildi. İçerik 'pure_latex' olarak render edilecek. İçerik: "${textPart}"`);
+            // Bütün elementi, içeriği saf LaTeX olarak kabul ederek render et ve işlemi bitir.
+            return await this.renderPureLatex(element, textPart, false);
+        }
+    }
+    // --- PARADOKS AVCISI SONU ---
 
             element.innerHTML = '';
             element.classList.add('mixed-content-container');
@@ -442,13 +533,18 @@ export class GlobalRenderManager {
                     await this.renderPureLatex(span, part.content, false);
                 } else {
                     span.className = 'text-part';
-                    span.textContent = part.content;
+                    // Türkçe karakter desteği ile text render
+                    span.textContent = this.sanitizeTurkishContent(part.content);
                 }
                 
                 element.appendChild(span);
             }
             
-            element.classList.add('mixed-content-rendered');
+            element.classList.add('rendered-mixed_content');
+            
+            // YENİ: Overflow kontrolü ve CSS class ekleme
+            this.checkAndMarkOverflow(element);
+            
             return true;
             
         } catch (error) {
@@ -459,7 +555,7 @@ export class GlobalRenderManager {
         }
     }
 
-    // Optimize edilmiş mixed content splitter
+    // Optimize edilmiş mixed content splitter (Türkçe karakter desteği ile)
     splitMixedContent(content) {
         const parts = [];
         const regex = /(\$\$[\s\S]*?\$\$|\$[\s\S]*?\$|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\))/g;
@@ -507,16 +603,21 @@ export class GlobalRenderManager {
         
         await this.initializeMathJax();
         
-        // ✅ Container visibility kontrolü
-        const wasHidden = container.offsetParent === null;
+        // ✅ Container visibility kontrolü (güçlendirildi)
+        const wasHidden = container.offsetParent === null || 
+                         container.style.display === 'none' || 
+                         container.style.visibility === 'hidden' ||
+                         container.classList.contains('hidden');
+                         
         if (wasHidden) {
-            console.warn('⚠️ Container gizli, render için geçici gösterilecek');
+            console.log('🔄 Container gizli, render için geçici gösterilecek');
             // Geçici olarak görünür yap (off-screen)
             container.style.position = 'absolute';
             container.style.top = '-9999px';
             container.style.left = '0px';
             container.style.visibility = 'visible';
             container.style.display = 'block';
+            container.style.opacity = '1';
         }
         
         const elements = this.collectRenderableElements(container);
@@ -530,17 +631,25 @@ export class GlobalRenderManager {
                 container.style.left = '';
                 container.style.visibility = '';
                 container.style.display = '';
+                container.style.opacity = '';
             }
             return;
         }
 
-        // Priority elementleri ayır
+        // Priority elementleri ayır (sıralama düzeltildi)
         const { priorityElements, normalElements } = this.separateByPriority(elements);
 
         console.log(`⚡️ Priority: ${priorityElements.length}, Normal: ${normalElements.length}`);
 
-        // Önce priority elementleri render et
+        // Önce priority elementleri render et (sıralı)
         if (priorityElements.length > 0) {
+            // Priority elementleri sırala (önem sırasına göre)
+            priorityElements.sort((a, b) => {
+                const aPriority = this.getFieldPriority(a.element);
+                const bPriority = this.getFieldPriority(b.element);
+                return bPriority - aPriority; // Yüksek öncelik önce
+            });
+            
             for (const item of priorityElements) {
                 await this.renderElement(item.element, item.content, { displayMode: item.isDisplay });
                 
@@ -577,12 +686,32 @@ export class GlobalRenderManager {
             container.style.left = '';
             container.style.visibility = '';
             container.style.display = '';
+            container.style.opacity = '';
         }
         
         console.log('✅ Container render tamamlandı:', this.getStats());
     }
 
-    // YENİ: Priority'ye göre elementleri ayır
+    // YENİ: Field priority hesaplama
+    getFieldPriority(element) {
+        const fieldName = this.inferFieldName(element);
+        if (!fieldName) return 0;
+        
+        // Priority sıralaması
+        const priorityMap = {
+            'cozum_lateks': 100,
+            'tamCozumLateks': 90,
+            'adimAciklamasi': 80,
+            'ipucu': 70,
+            'hataAciklamasi': 60,
+            'sonucKontrolu': 50,
+            'metin_lateks': 40
+        };
+        
+        return priorityMap[fieldName] || 0;
+    }
+
+    // YENİ: Priority'ye göre elementleri ayır (sıralama düzeltildi)
     separateByPriority(elements) {
         const priorityElements = [];
         const normalElements = [];
@@ -601,19 +730,27 @@ export class GlobalRenderManager {
         return { priorityElements, normalElements };
     }
 
-    // Geliştirilmiş element collection
+    // Geliştirilmiş element collection - GÜÇLENDİRİLDİ
     collectRenderableElements(container) {
         const elements = [];
         
-        // Smart content elementleri
+        // Smart content elementleri - GÜÇLENDİRİLDİ
         container.querySelectorAll('.smart-content').forEach(el => {
             const content = el.getAttribute('data-content') || el.textContent;
             if (content && content.trim()) {
-                elements.push({
-                    element: el,
-                    content: content,
-                    isDisplay: false
-                });
+                // Element zaten render edilmiş mi kontrol et
+                if (!el.classList.contains('math-rendered') && 
+                    !el.classList.contains('rendered-text') && 
+                    !el.classList.contains('rendered-pure_latex') && 
+                    !el.classList.contains('rendered-inline_math') && 
+                    !el.classList.contains('rendered-mixed_content')) {
+                    
+                    elements.push({
+                        element: el,
+                        content: content.trim(),
+                        isDisplay: false
+                    });
+                }
             }
         });
         
@@ -623,11 +760,40 @@ export class GlobalRenderManager {
             if (content && content.trim()) {
                 elements.push({
                     element: el,
-                    content: content,
+                    content: content.trim(),
                     isDisplay: true
                 });
             }
         });
+        
+        // YENİ: Gizli elementleri de kontrol et
+        if (elements.length === 0) {
+            console.log('🔍 Render edilebilir element bulunamadı, gizli elementler kontrol ediliyor...');
+            
+            // Gizli elementleri de tara
+            const allSmartContent = container.querySelectorAll('.smart-content');
+            allSmartContent.forEach(el => {
+                const content = el.getAttribute('data-content') || el.textContent;
+                if (content && content.trim()) {
+                    console.log('🔍 Gizli element bulundu:', {
+                        content: content.substring(0, 50) + '...',
+                        classes: el.className,
+                        isVisible: el.offsetParent !== null
+                    });
+                }
+            });
+        }
+        
+        // Debug bilgisi
+        if (elements.length > 0) {
+            console.log(`🔍 ${elements.length} render edilebilir element bulundu:`, 
+                elements.map(e => ({ 
+                    class: e.element.className, 
+                    content: e.content.substring(0, 30) + '...',
+                    isDisplay: e.isDisplay 
+                }))
+            );
+        }
         
         return elements;
     }
@@ -645,7 +811,10 @@ export class GlobalRenderManager {
     // Geliştirilmiş fallback
     renderFallback(element, content, error) {
         console.error("Render Fallback:", { content: content.substring(0, 50), error: error.message });
-        element.textContent = content;
+        
+        // Türkçe karakter desteği ile fallback
+        const safeContent = this.sanitizeTurkishContent(content);
+        element.textContent = safeContent;
         element.classList.add('render-error');
         element.title = `Render hatası: ${error.message}`;
     }
@@ -672,16 +841,20 @@ export class GlobalRenderManager {
                     fontCache: 'global',
                     displayAlign: 'center',
                     displayIndent: '0',
-                    // ✅ SVG optimizasyonları
-                    scale: 1,
-                    minScale: 0.5,
+                    // ✅ SVG optimizasyonları (GÜÇLENDİRİLDİ - Uzun ifadeler için)
+                    scale: 1.1, // Uzun ifadeler için boyut artırıldı
+                    minScale: 0.8, // Minimum boyut artırıldı
+                    maxScale: 2.0, // Maksimum boyut artırıldı
                     mtextInheritFont: false,
                     merrorInheritFont: true,
                     mathmlSpacing: false,
                     skipAttributes: {},
-                    exFactor: 0.5,
+                    exFactor: 0.6, // Uzun ifadeler için artırıldı
                     displayOverflow: 'linebreak',
-                    linebreaks: { automatic: false }
+                    linebreaks: { automatic: true, width: 'container' }, // Otomatik satır kırma aktif
+                    // YENİ: SVG hata yakalama
+                    invalidColor: '#FF0000',
+                    unknownFamilyColor: '#FF0000'
                 },
                 startup: {
                     ready: () => {
@@ -739,23 +912,41 @@ export class GlobalRenderManager {
     normalizeContent(content) {
         if (!content || typeof content !== 'string') return '';
         
-        let normalized = content.trim();
-        
-        // Çift sınırlayıcıları temizle
-        normalized = normalized
-            .replace(/\$\$\$/g, '$$')
-            .replace(/\$\s+\$/g, '$$')
-            .replace(/\\\[\s*\\\[/g, '\\[')
-            .replace(/\\\]\s*\\\]/g, '\\]');
-        
-        // Markdown formatını temizle
-        normalized = normalized.replace(/\*\*(.*?)\*\*/g, '$1');
-        
-        // Boş sınırlayıcıları kaldır
-        normalized = normalized.replace(/\$\s*\$/g, '');
-        normalized = normalized.replace(/\$\$\s*\$\$/g, '');
-        
-        return normalized;
+        // Türkçe karakterleri koru
+        return content.trim();
+    }
+    
+    // YENİ: Overflow kontrolü ve CSS class ekleme
+    checkAndMarkOverflow(element) {
+        try {
+            // MathJax elementlerini bul
+            const mathjaxElements = element.querySelectorAll('.mjx-chtml, .mjx-container, svg');
+            
+            mathjaxElements.forEach(mathElement => {
+                // Element boyutlarını kontrol et
+                const rect = mathElement.getBoundingClientRect();
+                const parentRect = element.getBoundingClientRect();
+                
+                // İçerik taşıyor mu kontrol et
+                const hasOverflow = rect.width > parentRect.width || 
+                                   rect.height > parentRect.height ||
+                                   mathElement.scrollWidth > mathElement.clientWidth ||
+                                   mathElement.scrollHeight > mathElement.clientHeight;
+                
+                if (hasOverflow) {
+                    // Overflow varsa has-overflow class'ı ekle
+                    mathElement.classList.add('has-overflow');
+                    element.classList.add('has-overflow');
+                } else {
+                    // Overflow yoksa has-overflow class'ını kaldır
+                    mathElement.classList.remove('has-overflow');
+                    element.classList.remove('has-overflow');
+                }
+            });
+            
+        } catch (error) {
+            console.warn('⚠️ Overflow kontrolü sırasında hata:', error);
+        }
     }
 
     hashCode(str) {
@@ -779,7 +970,7 @@ export class GlobalRenderManager {
         }
     }
 
-    // Geliştirilmiş istatistikler
+    // Geliştirilmiş istatistikler (Türkçe karakter desteği dahil)
     getStats() {
         const totalRenders = this.stats.successful + this.stats.failed;
         const metadataEfficiency = totalRenders > 0 ? 
@@ -794,11 +985,10 @@ export class GlobalRenderManager {
             avgRenderTimeMs: this.stats.avgRenderTime.toFixed(2),
             hasMetadata: !!this.solutionMetadata,
             cacheSize: this.contentAnalysisCache.size,
-            svgErrorRate: totalRenders > 0 ? (this.stats.svgErrors / totalRenders * 100).toFixed(1) + '%' : '0%'
+            svgErrorRate: totalRenders > 0 ? (this.stats.svgErrors / totalRenders * 100).toFixed(1) + '%' : '0%',
+            turkishCharFixRate: totalRenders > 0 ? (this.stats.turkishCharFixes / totalRenders * 100).toFixed(1) + '%' : '0%'
         };
     }
-
-    
 
     // Cache temizleme
     reset() {
@@ -817,7 +1007,9 @@ export class GlobalRenderManager {
             metadataHits: 0,
             metadataMisses: 0,
             avgRenderTime: 0,
-            totalRenderTime: 0
+            totalRenderTime: 0,
+            svgErrors: 0,
+            turkishCharFixes: 0
         };
     }
 
@@ -830,6 +1022,8 @@ export class GlobalRenderManager {
         console.log('Ortalama Render Süresi:', stats.avgRenderTimeMs + 'ms');
         console.log('Cache Boyutu:', stats.cacheSize);
         console.log('MathJax Durumu:', stats.mathJaxReady ? '✅ Hazır' : '❌ Hazır değil');
+        console.log('SVG Hata Oranı:', stats.svgErrorRate);
+        console.log('Türkçe Karakter Düzeltme Oranı:', stats.turkishCharFixRate);
         console.groupEnd();
     }
 }
@@ -840,7 +1034,7 @@ export const globalRenderManager = new GlobalRenderManager();
 // Global erişim için window objesine ekle
 if (typeof window !== 'undefined') {
     window.globalRenderManager = globalRenderManager;
-    console.log('✅ Prompt-Optimized globalRenderManager hazır');
+    console.log('✅ Prompt-Optimized + Turkish Support globalRenderManager hazır');
 }
 
 // DEBUG: Development modunda performance monitoring

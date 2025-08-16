@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Sistem Testi - Matematik Asistanı</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-center mb-8 text-blue-600">
+            🧮 Final Sistem Testi - Matematik Asistanı
+        </h1>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">🔍 Test 1: Türkçe Karakter + LaTeX</h2>
+            <div class="smart-content" data-content="Bu bir test sorusudur: $x + 5 = 10$ denklemini çözün. Sonuç: $x = 5$ olur."></div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">🔍 Test 2: Pure LaTeX</h2>
+            <div class="latex-content" data-latex="x^2 + 2x + 1 = (x + 1)^2"></div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">🔍 Test 3: Mixed Content (LaTeX komutları var ama $ yok)</h2>
+            <div class="smart-content" data-content="Küme işlemleri: s(A) \geq s(B) ve s(A \cup B) = 8"></div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">🔍 Test 4: Türkçe Metin</h2>
+            <div class="smart-content" data-content="Bu bir Türkçe metindir. ğüşıöçĞÜŞİÖÇ karakterleri test ediliyor."></div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">🔍 Test 5: Inline Math</h2>
+            <div class="smart-content" data-content="Denklem: $2x + 3y = 15$ ve $x - y = 2$"></div>
+        </div>
+        
+        <button id="test-render" class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+            🚀 Render Testini Başlat
+        </button>
+        
+        <div id="test-results" class="mt-6 bg-gray-50 rounded-lg p-4 hidden">
+            <h3 class="font-semibold mb-2">Test Sonuçları:</h3>
+            <div id="results-content"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { globalRenderManager } from './js/modules/globalRenderManager.js';
+        
+        document.getElementById('test-render').addEventListener('click', async () => {
+            const button = document.getElementById('test-render');
+            const resultsDiv = document.getElementById('test-results');
+            const resultsContent = document.getElementById('results-content');
+            
+            button.disabled = true;
+            button.textContent = '🔄 Test ediliyor...';
+            resultsDiv.classList.remove('hidden');
+            resultsContent.innerHTML = '<div class="text-gray-600">Test başlatılıyor...</div>';
+            
+            try {
+                console.log('🧪 Final sistem testi başlatılıyor...');
+                
+                // Test container'ı oluştur
+                const testContainer = document.createElement('div');
+                testContainer.className = 'test-container';
+                testContainer.innerHTML = document.body.innerHTML;
+                
+                // Render işlemini başlat
+                await globalRenderManager.renderContainer(testContainer);
+                
+                // Sonuçları kontrol et
+                const renderedElements = testContainer.querySelectorAll('.smart-content, .latex-content');
+                const successCount = testContainer.querySelectorAll('.math-rendered, .rendered-text, .rendered-pure_latex, .rendered-inline_math, .rendered-mixed_content').length;
+                
+                const results = {
+                    total: renderedElements.length,
+                    successful: successCount,
+                    failed: renderedElements.length - successCount,
+                    successRate: ((successCount / renderedElements.length) * 100).toFixed(1)
+                };
+                
+                console.log('📊 Test sonuçları:', results);
+                
+                // Sonuçları göster
+                resultsContent.innerHTML = `
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-green-100 p-3 rounded">
+                            <div class="font-semibold text-green-800">Toplam Element</div>
+                            <div class="text-2xl font-bold text-green-600">${results.total}</div>
+                        </div>
+                        <div class="bg-blue-100 p-3 rounded">
+                            <div class="font-semibold text-blue-800">Başarılı</div>
+                            <div class="text-2xl font-bold text-blue-600">${results.successful}</div>
+                        </div>
+                        <div class="bg-red-100 p-3 rounded">
+                            <div class="font-semibold text-red-800">Başarısız</div>
+                            <div class="text-2xl font-bold text-red-600">${results.failed}</div>
+                        </div>
+                        <div class="bg-purple-100 p-3 rounded">
+                            <div class="font-semibold text-purple-800">Başarı Oranı</div>
+                            <div class="text-2xl font-bold text-purple-600">%${results.successRate}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 p-3 bg-gray-100 rounded">
+                        <div class="font-semibold">Render İstatistikleri:</div>
+                        <pre class="text-sm mt-2">${JSON.stringify(globalRenderManager.getStats(), null, 2)}</pre>
+                    </div>
+                `;
+                
+                button.textContent = '✅ Test Tamamlandı';
+                button.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                button.classList.add('bg-green-600');
+                
+            } catch (error) {
+                console.error('❌ Test hatası:', error);
+                resultsContent.innerHTML = `
+                    <div class="bg-red-100 p-3 rounded text-red-800">
+                        <div class="font-semibold">Test Hatası:</div>
+                        <div class="mt-2">${error.message}</div>
+                    </div>
+                `;
+                
+                button.textContent = '❌ Test Hatası';
+                button.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                button.classList.add('bg-red-600');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -33,12 +33,16 @@ export function buildUnifiedSolutionPrompt(problemContext) {
 
 Soru: "${ctx}"
 
-# MATEMATİK SORU TESPİTİ
-✅ Geçerli: denklemler(2x+5=15), işlemler(15+27), kesirler(2/3+1/4), yüzdeler(%20), problemler, geometri
-❌ Geçersiz: selamlaşma, eksik("5 elma"), sorusuz diziler
+# BASİT MATEMATİK KONTROLÜ
+Bu girdi matematik sorusu mu?
 
-# MATEMATİK DEĞİLSE: 
-Return this JSON with _error:"NOT_MATH_PROBLEM"
+## KONTROL:
+1. **Tek matematik sorusu mu?** (Evet/Hayır)
+2. **Matematik içeriyor mu?** (Sayılar, işlemler, denklemler, geometri)
+
+## ÇIKTI:
+- **Evet ise:** Normal matematik çözümü üret
+- **Hayır ise:** Return this JSON with _error:"NOT_MATH_PROBLEM"
 
 # MATEMATİKSE: Aşağıdaki yapıda TÜRKÇE çözüm üret:
 
@@ -55,45 +59,45 @@ Return this JSON with _error:"NOT_MATH_PROBLEM"
       "adimBasligi": "Yapılan işlemin özeti",
       "adimAciklamasi": [
         "Her düşünce AYRI eleman",
-        "Önce NE yapıyoruz",
-        "Sonra NEDEN yapıyoruz",
-        "Matematik: $formül$"
+        "Önce NE yapıyoruz: $x + 5 = 10$ denklemini çözüyoruz",
+        "Sonra NEDEN yapıyoruz: $x$ değerini bulmak için",
+        "Matematik: $x = 10 - 5 = 5$"
       ],
-      "cozum_lateks": "Bu adımın sonucu - saf LaTeX, $ YOK",
-      "odak_alan_lateks": "değişen kısım veya null",
-      "ipucu": "Düşündürücü soru, cevap verme",
+      "cozum_lateks": "x = 5",
+      "odak_alan_lateks": "x değeri",
+      "ipucu": "Düşündürücü soru: $x$'i yalnız bırakmak için hangi işlemi yapmalıyız?",
       "yanlisSecenekler": [
         {
-          "metin_lateks": "YANLIŞ1 - MUTLAKA bu adımın sonucuna benzer",
-          "hataAciklamasi": "Neden yanlış + Doğrusu nasıl"
+          "metin_lateks": "x = -5",
+          "hataAciklamasi": "İşaret hatası! $x + 5 = 10$ ise $x = 10 - 5 = 5$ olmalı"
         },
         {
-          "metin_lateks": "YANLIŞ2 - MUTLAKA bu adımın sonucuna benzer",
-          "hataAciklamasi": "Farklı hata türü + Düzeltme"
+          "metin_lateks": "x = 15",
+          "hataAciklamasi": "Hesaplama hatası! $5 + 15 = 20$ olur, $10$ değil"
         }
       ]
     }
   ],
-  "tamCozumLateks": ["adım1", "adım2", "sonuç"],
-  "sonucKontrolu": "Doğrulama açıklaması $matematik$ ile",
+  "tamCozumLateks": ["x + 5 = 10", "x = 10 - 5", "x = 5"],
+  "sonucKontrolu": "Doğrulama: $5 + 5 = 10$ ✓ Denklem sağlanıyor",
   "renderMetadata": {
     "contentTypes": {
-      "adimAciklamasi": ["inline_math"],
+      "adimAciklamasi": ["mixed_content"],
       "cozum_lateks": ["pure_latex"],
-      "ipucu": ["inline_math"],
-      "hataAciklamasi": ["inline_math"],
+      "ipucu": ["mixed_content"],
+      "hataAciklamasi": ["mixed_content"],
       "tamCozumLateks": ["pure_latex"],
-      "sonucKontrolu": ["inline_math"]
+      "sonucKontrolu": ["mixed_content"]
     },
     "mathComplexity": "low|medium|high",
     "priorityElements": ["cozum_lateks", "tamCozumLateks"],
     "renderHints": {
-      "hasFractions": boolean,
-      "hasExponents": boolean,
-      "hasRoots": boolean,
-      "hasMatrices": boolean,
-      "hasEquations": boolean,
-      "estimatedRenderTime": "fast|medium|slow"
+      "hasFractions": false,
+      "hasExponents": false,
+      "hasRoots": false,
+      "hasMatrices": false,
+      "hasEquations": false,
+      "estimatedRenderTime": "fast"
     }
   }
 }
@@ -189,10 +193,12 @@ Doğru cevap: X ise
 ☐ Her adım tek konsept mi öğretiyor?
 ☐ Render metadata dolu mu?
 
-# FORMAT KURALLARI
-- Metin içi matematik: $x+5=10$
-- Saf LaTeX alanları: x+5=10 ($ YOK)
+# FORMAT KURALLARI - GÜÇLENDİRİLDİ
+- Metin içi matematik: $x+5=10$ (adimAciklamasi, ipucu, hataAciklamasi, sonucKontrolu)
+- Saf LaTeX alanları: x+5=10 ($ YOK) (cozum_lateks, tamCozumLateks)
 - Escape: \\\\ yerine \\\\\\\\ kullan
+- ÖNEMLİ: adimAciklamasi, ipucu, hataAciklamasi, sonucKontrolu alanlarında matematik ifadeleri MUTLAKA $ içinde olmalı
+- ÖNEMLİ: cozum_lateks, tamCozumLateks alanlarında $ işareti KULLANILMAMALI
 
 # HATIRLATMA
 - Yanlış sayısı 2'den az = KABUL EDİLMEZ

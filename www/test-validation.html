@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matematik Sorusu Doğrulama Testi</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        .test-section h3 {
+            color: #34495e;
+            margin-top: 0;
+        }
+        .test-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+        .test-input:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        .test-button {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        .test-button:hover {
+            background-color: #2980b9;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .result.success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .result.error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .result.warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        .examples {
+            background-color: #e8f4fd;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+        }
+        .examples h4 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .example-item {
+            margin: 5px 0;
+            padding: 5px;
+            background-color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .example-item:hover {
+            background-color: #f0f0f0;
+        }
+        .category-tag {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .category-valid { background-color: #d4edda; color: #155724; }
+        .category-invalid { background-color: #f8d7da; color: #721c24; }
+        .category-multiple { background-color: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧮 Matematik Sorusu Doğrulama Sistemi Testi</h1>
+        
+        <div class="test-section">
+            <h3>📝 Metin Girişi Testi</h3>
+            <input type="text" id="textInput" class="test-input" placeholder="Matematik sorusunu buraya yazın...">
+            <button onclick="testTextValidation()" class="test-button">Test Et</button>
+            <button onclick="clearTextResult()" class="test-button">Temizle</button>
+            <div id="textResult" class="result" style="display: none;"></div>
+            
+            <div class="examples">
+                <h4>💡 Test Örnekleri (Tıklayarak deneyin):</h4>
+                <div class="example-item" onclick="testExample('2x + 5 = 15')">✅ "2x + 5 = 15" (Geçerli denklem)</div>
+                <div class="example-item" onclick="testExample('15 + 27 = ?')">✅ "15 + 27 = ?" (Geçerli işlem)</div>
+                <div class="example-item" onclick="testExample('Bir üçgenin alanını bul')">✅ "Bir üçgenin alanını bul" (Geçerli geometri)</div>
+                <div class="example-item" onclick="testExample('merhaba nasılsın')">❌ "merhaba nasılsın" (Matematik değil)</div>
+                <div class="example-item" onclick="testExample('2x+5=15 ve 3y-2=10')">⚠️ "2x+5=15 ve 3y-2=10" (Birden fazla soru)</div>
+                <div class="example-item" onclick="testExample('5')">❌ "5" (Sadece sayı)</div>
+                <div class="example-item" onclick="testExample('test')">❌ "test" (Test metni)</div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>📸 Fotoğraf Girişi Testi</h3>
+            <input type="file" id="photoInput" class="test-input" accept="image/*">
+            <button onclick="testPhotoValidation()" class="test-button">Test Et</button>
+            <button onclick="clearPhotoResult()" class="test-button">Temizle</button>
+            <div id="photoResult" class="result" style="display: none;"></div>
+            
+            <div class="examples">
+                <h4>💡 Fotoğraf Test Örnekleri:</h4>
+                <div class="example-item">• Geçerli matematik fotoğrafı (JPG, PNG)</div>
+                <div class="example-item">• Çok büyük fotoğraf (>5MB)</div>
+                <div class="example-item">• Çok küçük fotoğraf (<10KB)</div>
+                <div class="example-item">• Geçersiz format (TXT, PDF)</div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🔍 Sistem Bilgileri</h3>
+            <div class="examples">
+                <h4>✅ Geçerli Matematik Sorusu Kriterleri:</h4>
+                <div>• En az 3 matematiksel öğe içermeli</div>
+                <div>• Soru işareti (?) veya soru kelimeleri olmalı</div>
+                <div>• Sayılar, işlemler, değişkenler içermeli</div>
+                <div>• Tek bir matematik sorusu olmalı</div>
+                
+                <h4>❌ Reddedilen İçerikler:</h4>
+                <div>• Selamlaşma ve sosyal içerik</div>
+                <div>• Test ve deneme metinleri</div>
+                <div>• Sadece sayılar (soru yok)</div>
+                <div>• Birden fazla matematik sorusu</div>
+                <div>• Çok kısa (<3 karakter) veya çok uzun (>1000 karakter)</div>
+                
+                <h4>⚠️ Güvenlik Özellikleri:</h4>
+                <div>• Spam önleme (uzun girdiler)</div>
+                <div>• Format kontrolü (fotoğraf boyutu, türü)</div>
+                <div>• Kategori bazlı hata mesajları</div>
+                <div>• Öneri sistemi</div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { validateMathProblem, validateMathPhoto } from './js/services/apiService.js';
+        
+        window.testTextValidation = async function() {
+            const input = document.getElementById('textInput').value.trim();
+            const resultDiv = document.getElementById('textResult');
+            
+            if (!input) {
+                resultDiv.innerHTML = '❌ Lütfen bir metin girin!';
+                resultDiv.className = 'result error';
+                resultDiv.style.display = 'block';
+                return;
+            }
+            
+            try {
+                const validation = validateMathProblem(input);
+                let resultHTML = '';
+                let resultClass = '';
+                
+                if (validation.isValid) {
+                    resultHTML = `✅ ${validation.reason}\n\n`;
+                    resultHTML += `📊 Kategori: <span class="category-tag category-valid">${validation.category}</span>\n`;
+                    resultHTML += `🔢 Matematik Skoru: ${validation.mathScore}\n`;
+                    resultHTML += `🧮 Tespit Edilen Öğeler: ${validation.mathElements.join(', ')}\n`;
+                    resultClass = 'result success';
+                } else {
+                    resultHTML = `❌ ${validation.reason}\n\n`;
+                    resultHTML += `📊 Kategori: <span class="category-tag category-invalid">${validation.category}</span>\n`;
+                    resultClass = 'result error';
+                }
+                
+                if (validation.suggestions && validation.suggestions.length > 0) {
+                    resultHTML += '\n💡 Öneriler:\n';
+                    validation.suggestions.forEach(suggestion => {
+                        resultHTML += `• ${suggestion}\n`;
+                    });
+                }
+                
+                resultDiv.innerHTML = resultHTML;
+                resultDiv.className = resultClass;
+                resultDiv.style.display = 'block';
+                
+            } catch (error) {
+                resultDiv.innerHTML = `❌ Hata oluştu: ${error.message}`;
+                resultDiv.className = 'result error';
+                resultDiv.style.display = 'block';
+            }
+        };
+        
+        window.testPhotoValidation = async function() {
+            const fileInput = document.getElementById('photoInput');
+            const resultDiv = document.getElementById('photoResult');
+            
+            if (!fileInput.files[0]) {
+                resultDiv.innerHTML = '❌ Lütfen bir fotoğraf seçin!';
+                resultDiv.className = 'result error';
+                resultDiv.style.display = 'block';
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            
+            try {
+                // Dosyayı base64'e çevir
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const base64Data = e.target.result;
+                    const validation = validateMathPhoto(base64Data);
+                    
+                    let resultHTML = '';
+                    let resultClass = '';
+                    
+                    if (validation.isValid) {
+                        resultHTML = `✅ ${validation.reason}\n\n`;
+                        resultHTML += `📊 Kategori: <span class="category-tag category-valid">${validation.category}</span>\n`;
+                        resultHTML += `📁 Dosya Boyutu: ${validation.estimatedSizeKB} KB\n`;
+                        resultClass = 'result success';
+                    } else {
+                        resultHTML = `❌ ${validation.reason}\n\n`;
+                        resultHTML += `📊 Kategori: <span class="category-tag category-invalid">${validation.category}</span>\n`;
+                        resultClass = 'result error';
+                    }
+                    
+                    if (validation.suggestions && validation.suggestions.length > 0) {
+                        resultHTML += '\n💡 Öneriler:\n';
+                        validation.suggestions.forEach(suggestion => {
+                            resultHTML += `• ${suggestion}\n`;
+                        });
+                    }
+                    
+                    resultDiv.innerHTML = resultHTML;
+                    resultDiv.className = resultClass;
+                    resultDiv.style.display = 'block';
+                };
+                
+                reader.readAsDataURL(file);
+                
+            } catch (error) {
+                resultDiv.innerHTML = `❌ Hata oluştu: ${error.message}`;
+                resultDiv.className = 'result error';
+                resultDiv.style.display = 'block';
+            }
+        };
+        
+        window.testExample = function(text) {
+            document.getElementById('textInput').value = text;
+            testTextValidation();
+        };
+        
+        window.clearTextResult = function() {
+            document.getElementById('textResult').style.display = 'none';
+            document.getElementById('textInput').value = '';
+        };
+        
+        window.clearPhotoResult = function() {
+            document.getElementById('photoResult').style.display = 'none';
+            document.getElementById('photoInput').value = '';
+        };
+    </script>
+</body>
+</html>

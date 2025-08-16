@@ -26,17 +26,17 @@ export const FirestoreManager = {
             displayName: additionalData.displayName || user.displayName || 'Kullanıcı',
             provider: user.providerData[0].providerId, // 'password', 'google.com' etc.
             
-            // Ücretsiz Kullanıcı Limitleri
-            dailyQueryCount: 3, // Herkese başlangıçta 3 hak veriyoruz.
+            // Ücretsiz Kullanıcı Limitleri - AYLIK SİSTEM
+            monthlyQueryCount: 0, // Aylık sorgu sayısı (başlangıçta 0)
             tokenQueries: 0,
-            lastQueryDate: today.toISOString().split('T')[0], // YYYY-MM-DD formatı
+            lastMonthlyResetDate: today, // Aylık reset tarihi
 
             mistakeProfile: {}, // Kullanıcının uzun süreli hata geçmişi için boş bir nesne
 
             // Abonelik Bilgileri (Varsayılan olarak 'free')
             subscription: {
                 tier: 'free',
-                monthlyQueryLimit: 0,
+                monthlyQueryLimit: 10, // Ücretsiz kullanıcılar için aylık 10 hak
                 monthlyQueryCount: 0,
                 lastMonthlyResetDate: today,
                 expiresDate: null
@@ -70,17 +70,26 @@ export const FirestoreManager = {
         }
 
         let userData = docSnap.data();
-        const today = new Date().toISOString().split('T')[0];
+        const today = new Date();
+        const currentMonth = today.getMonth();
+        const currentYear = today.getFullYear();
 
-        // Günlük sorgu sayısını sıfırlama mantığı
-        if (userData.lastQueryDate !== today) {
-            userData.dailyQueryCount = 0;
-            userData.lastQueryDate = today;
-            await updateDoc(userRef, {
-                dailyQueryCount: 0,
-                lastQueryDate: today
-            });
-            console.log("Firestore: Günlük sorgu hakkı sıfırlandı.");
+        // Aylık sorgu sayısını sıfırlama mantığı
+        if (userData.lastMonthlyResetDate) {
+            const lastResetDate = userData.lastMonthlyResetDate.toDate ? userData.lastMonthlyResetDate.toDate() : new Date(userData.lastMonthlyResetDate);
+            const lastMonth = lastResetDate.getMonth();
+            const lastYear = lastResetDate.getFullYear();
+            
+            // Eğer ay değiştiyse, aylık sorgu sayısını sıfırla
+            if (currentMonth !== lastMonth || currentYear !== lastYear) {
+                userData.monthlyQueryCount = 0;
+                userData.lastMonthlyResetDate = today;
+                await updateDoc(userRef, {
+                    monthlyQueryCount: 0,
+                    lastMonthlyResetDate: today
+                });
+                console.log("Firestore: Aylık sorgu hakkı sıfırlandı.");
+            }
         }
 
         return userData;
@@ -99,11 +108,11 @@ export const FirestoreManager = {
         const docSnap = await getDoc(userRef);
         if (!docSnap.exists()) return null;
 
-        const currentCount = docSnap.data().dailyQueryCount || 0;
+        const currentCount = docSnap.data().monthlyQueryCount || 0;
         const newCount = currentCount + amount;
 
-        await updateDoc(userRef, { dailyQueryCount: newCount });
-        console.log("Firestore: Sorgu sayısı güncellendi:", newCount);
+        await updateDoc(userRef, { monthlyQueryCount: newCount });
+        console.log("Firestore: Aylık sorgu sayısı güncellendi:", newCount);
         return newCount;
     },
 
@@ -176,5 +185,61 @@ export const FirestoreManager = {
         const userRef = doc(db, "users", user.uid);
         await updateDoc(userRef, { membershipType: 'premium' });
         console.log("Firestore: Kullanıcı premium üyeliğe yükseltildi!");
+    },
+
+    /**
+     * Kullanıcının belirli bir alanını günceller.
+     * @param {string} uid - Kullanıcı ID'si
+     * @param {string} field - Güncellenecek alan adı
+     * @param {any} value - Yeni değer
+     */
+    async updateUserField(uid, field, value) {
+        const userRef = doc(db, "users", uid);
+        await updateDoc(userRef, { [field]: value });
+        console.log(`Firestore: Kullanıcı alanı güncellendi -> ${field}`);
+    },
+
+    /**
+     * Mevcut kullanıcıları günlük sistemden aylık sisteme dönüştürür.
+     * Bu fonksiyon sadece bir kez çalıştırılmalıdır.
+     */
+    async migrateToMonthlySystem() {
+        const user = auth.currentUser;
+        if (!user) throw new Error("Migration için kullanıcı giriş yapmalı.");
+        
+        const userRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(userRef);
+        
+        if (!docSnap.exists()) {
+            console.log("Firestore: Migration için kullanıcı verisi bulunamadı.");
+            return;
+        }
+
+        const userData = docSnap.data();
+        
+        // Eğer zaten aylık sistemdeyse migration yapma
+        if (userData.monthlyQueryCount !== undefined && userData.lastMonthlyResetDate) {
+            console.log("Firestore: Kullanıcı zaten aylık sistemde.");
+            return;
+        }
+
+        // Migration yap
+        const today = new Date();
+        const migrationData = {
+            monthlyQueryCount: userData.dailyQueryCount || 0,
+            lastMonthlyResetDate: today,
+            subscription: {
+                ...userData.subscription,
+                monthlyQueryLimit: 10 // Ücretsiz kullanıcılar için aylık 10 hak
+            }
+        };
+
+        // Eski alanları kaldır
+        const fieldsToRemove = ['dailyQueryCount', 'lastQueryDate'];
+        
+        await updateDoc(userRef, migrationData);
+        console.log("Firestore: Kullanıcı aylık sisteme başarıyla dönüştürüldü.");
+        
+        return migrationData;
     }
 };
